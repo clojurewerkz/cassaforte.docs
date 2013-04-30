@@ -1,7 +1,6 @@
 # Cassaforte Documentation
 
-This is a documentation site for [Cassaforte](https://github.com/clojurewerkz/cassaforte). Copy or clone me and adapt for your project
-that needs documentation guides similar to [rubyamqp.info](http://rubyamqp.info), [clojuremongodb.info](http://clojuremongodb.info) and so on.
+This is a documentation site for [Cassaforte](https://github.com/clojurewerkz/cassaforte).
 
 
 ## Install Dependencies
@@ -13,14 +12,15 @@ With Bundler:
 
 ## How to run a development server
 
-    ./bin/jekyll --auto --server
+    ./bin/jekyll serve --watch
 
+then navigate to [localhost:4000](http://localhost:4000)
 
 ## How to regenerate the site
 
 In order to modify contents and launch dev environment, run:
 
-    ./bin/jekyll
+    ./bin/jekyll build
 
 
 ## License & Copyright
