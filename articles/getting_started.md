@@ -47,7 +47,17 @@ Cassaforte artifacts are released to Clojars.
 It is recommended to stay up-to-date with new versions. New releases
 and important changes are announced [@ClojureWerkz](http://twitter.com/clojurewerkz).
 
-## Connecting To Cassandra
+## Enable CQL support on the server
+
+Cassaforte works with native CQL protocol, and works with Cassandra 1.2+.
+In order to enable native CQL, make sure `start_native_transport` is set to `true` in `cassandra.yaml`
+(which is usually located under `/etc/cassandra`).
+
+```
+start_native_transport: true
+```
+
+## Connect To Cassandra
 
 `clojurewerkz.cassaforte.cql/connect!` function connects to Cassanfra.
 
@@ -62,7 +72,7 @@ In order to connect to Cassandra cluster, use:
 (cql/connect! ["node1" "node2" "node3" ])
 ```
 
-### Creating and updating Keyspaces
+### Create and update Keyspaces
 
 Cassandra stores data in Keyspaces. They're somewhat similar to
 Databases in SQL databases.  Typically, one Keyspace is used for an
@@ -102,7 +112,7 @@ Switch to keyspace, in order to start with Column Families within the keyspace:
 
 You can learn more about working with keyspaces in [working with keyspaces guide](TBD)
 
-### Creating and updating Column Families
+### Create and update Column Families
 
 Column Families contain multiple columns, each of which has a name,
 value and timestamp, and is referenced by row key. In order to create
@@ -150,7 +160,7 @@ and change type of existing ones:
                  (rename-column :username :name))
 ```
 
-## Storing values
+## Store values
 
 Even though Cassandra is mostly known for it's fault-tolerancy and
 performance, it can also store data.
@@ -174,7 +184,7 @@ refer to [working with data](TBD) guide.
 (prepared
    (cql/insert :users {:name "Alex" :age (int 19)}))
 ```
-## Fetching values
+## Fetch values
 
 CQL offers some querying opportunities. You can use `IN` queries, query
 by range or an exact match. Let's populate our users table with some
