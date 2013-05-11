@@ -212,7 +212,7 @@ Select user by name:
 
 Using `IN` query, match any of the values given in vector:
 
-```
+```clojure
 (cql/select :users
             (where :name [:in ["Alex" "Robert"]]))
 ;; => [{:name "Alex", :age 19, :city "Munich"}

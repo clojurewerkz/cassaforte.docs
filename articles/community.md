@@ -1,11 +1,12 @@
 ---
-title: "Project Name: Community"
+title: "Cassaforte: Community"
 layout: article
 ---
 
 ## Mailing List
 
-[Project has a mailing list](). Feel free to join it and ask any questions you may have.
+[Project has a mailing list](https://groups.google.com/forum/?fromgroups#!forum/clojure-cassandra).
+Feel free to join it and ask any questions you may have.
 
 
 ## News & Announcements on Twitter
