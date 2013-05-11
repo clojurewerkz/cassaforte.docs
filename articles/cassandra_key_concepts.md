@@ -15,7 +15,7 @@ one node fails, data is still available for retrieval from the different node.
 
 Cassandra starts making most sense when your data is rather big. Because it
 was built for distribution, you can scale your reads and writes, and fine-tune and
-manage your database consistency and availability. Cassandra handles network partitions
+manage your database `consistency` and `availability`. Cassandra handles network partitions
 well, so even when your several nodes are unavailable for some time, you will still
 be able to easily recover from that.
 
@@ -24,21 +24,24 @@ is facing several problems:
 
   * __Load Balancing__: if you have more than one node in the system, the load should
     be evenly distributed between the workers.
-  * __Membership problem__ is solved by two parts: Service Discovery and Failure Detection.
+
+  * __Membership problem__ is solved by two parts: _Service Discovery_ and _Failure Detection_.
     Service Discovery comes into play when you set up a fresh node, add it to the cluster.
     Data gets replicated to that node and it starts receiving writes and serving reads.
     When the node has left the cluster, was taken down for maintenance, or shut down due
     to an error, and later recovered from the failure or was brought back after maintenance,
     it should join the cluster again automatically, otherwise maintenance overhead will
     be to large, and there will always be a rather large chunk of manual labour.
+
   * __Inter-node communication__: nodes should be able to communicate with each other,
     share internal information, distribute the data or inform about system changes. Nodes
     are able to retrieve missing information, schedule jobs accordingly, transfer state
     and hand off information stored while peer was unavailable.
 
 Many properties of the distributed systems require client to be smarter. Cassaforte
-uses DataStax java-driver underneath, which allows you to connect to the cluster, discover
-nodes in the cluster, set up retry and load balancing policies, among other features.
+uses [DataStax java-driver](github.com/datastax/java-driver) underneath, which allows
+you to connect to the cluster, discover nodes in the cluster, set up retry and load
+balancing policies, among other features.
 
 ## Cassandra and Dynamo
 
@@ -59,28 +62,34 @@ If you're familiar with Cassandra, you may want to skip this section.
 Here we'll mention Cassandra-specific concepts, that may be not familiar
 for the newcomers.
 
-Keyspace is what's usually called Database in relational databases, it
-holds Column Families, sets of key-value pairs. Column family is somewhat
+__Keyspace__ is what's usually called Database in relational databases, it
+holds Column Families, sets of key-value pairs. __Column family__ is somewhat
 close to the Table concept from relational DBs. There're no relationships
 enforced between Column Families in Cassandra, even though you may build
-your own foreign keys, there will be no checks performed during writes
+your own foreign keys, _there will be no checks performed_ during writes
 and deletes to ensure integrity. You'll have to implement these things
-yourself. In majority of cases, you want to denormalize your tables.
+yourself.
 
 Cassandra allows you to scale your database incrementally, by adding more
 nodes to the cluster. For that, it uses Consistent Hashing and Virtual Nodes.
 
-In relational databases, scalability is often achieved by 2 factors. First
-one is replication. You add slaves, that get replicated data from master,
-which allows you to scale reads. Second one is sharding. It allows you to
-distribute data, depending on the sharding key, to one of the machines.
+In relational databases, scalability is often achieved by 2 factors:
+
+  * __Replication__. You add slaves, that get replicated data from master,
+    which allows you to scale reads.
+
+  * __Sharding__. It allows you to distribute data, depending on the sharding key,
+    to one of the machines.
+
 With replication, you still get difficulties when you have write-heavy
 application. With shards, depending on how implement them, you will
 end up having hotspots, where one shard will be under heavier load than
 the rest of cluster. Overhead of moving data to extend shards is also on
 you.
 
-By using Consistent Hashing, you can solve this problem in a more elegant
+## Consistent Hashing
+
+By using __Consistent Hashing__, you can solve this problem in a more elegant
 way. Having a (very) large set of values form a Ring, each node takes over
 some range of a ring (think: angle). Hash function is then used to
 determine which node the object belongs to.
@@ -97,6 +106,8 @@ second one - from 3 to 5 and so on. Data will move to the node where it belongs,
 accoding to the hash function and new number of nodes. This also means
 that there will be no manual labour involved.
 
+## Virtual Nodes
+
 Virtual Nodes allow you to go even further, by splitting the Ring into the larger
 amount of chunks. Each node gets configured, depending on how many Virtual Nodes
 it may hold, and moving data becomes even easier.
@@ -112,7 +123,9 @@ In Cassandra, there are `static` and `dynamic` column families. Static column
 families are simple, you specify a fixed schema for the column family, add
 data according to the schema, and alter whenever the application requires it.
 
-For example, let's create a table called Users.
+### Statis Tables
+
+For example, let's create a table called `users`.
 
 ```sql
 CREATE TABLE users (name varchar, city varchar, PRIMARY KEY (name));
@@ -127,9 +140,9 @@ Data will be stored in a rather straightforward way:
 | Michael | Moscow |
 ```
 
-This will create a table Users, which will contain fixed set of fields, such
-as age, name and city. Whenever we have to add another column to the table,
-we execute Alter query:
+This will create a table `users`, which will contain fixed set of fields, such
+as `name` and `city`. Whenever we have to add another column to the table,
+for example, `age`, we execute Alter query:
 
 ```sql
 ALTER TABLE users ADD age int;
@@ -138,11 +151,13 @@ ALTER TABLE users ADD age int;
 This way we can make schema flexible, but there's nothing special about it,
 you may say.
 
-Dynamic Column Families is something that is more specific to Cassandra.
+### Dynamic Tables
+
+__Dynamic Column Families__ is something that is more specific to Cassandra.
 It is related to the Wide Rows concept. Let's say we need to store information
-about how the movie was rated. For that, we create a Movies table with a
-composite key, that consists of title and time, when it was rated. We'll use
-rating column to store rating for the given time.
+about how the movie was rated. For that, we create a `movies` table with a
+_composite key_, that consists of `title` and `time`, when it was rated. We'll use
+`rating` column to store rating for the given time.
 
 ```sql
 CREATE TABLE movies (title varchar, rating int, time timestamp, PRIMARY KEY (title, time));
@@ -165,7 +180,13 @@ Now let's take a closer look on how the information is stored:
 
 And so on. In this case we've treated both `time` and `rating` columns as values. You can go further
 and use one of them as something that's looks more like a key. For example, you can store data about
-organizations pretty much the same way:
+organizations pretty much the same way. In this example, we'll have a table called `people`, that
+holds `name` of the person, `company` he works for, `field_name` (which is set by application, that
+could be anything, like 'address' or 'phone').
+
+If you think of data the way we initially described it (`company` holds `people`, that can have
+some information about them stored in arbirary fields), you can represent it as:
+
 
 ```
 |   row key    |                                columns                                      |
@@ -181,6 +202,9 @@ organizations pretty much the same way:
 ```
 
 It's kind of a phone book, but you may have artibrary fields for things like phone, address and so on.
+Note that any person may have both phone or address, or just one of them. It's up to application and
+user to decide what to store in those columns.
+
 All you need is to have a composite key. Of course, same exact table could be represented as:
 
 ```
