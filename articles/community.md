@@ -16,7 +16,7 @@ To subscribe for announcements of releases, important changes and so on, please 
 
 ## What is ClojureWerkz?
 
-Project Name is part of the group of libraries known as ClojureWerkz, together with
+Cassaforte is part of the group of libraries known as ClojureWerkz, together with
 [Monger](http://clojuremongodb.info), [Welle](http://clojureriak.info), [Quartzite](http://clojurequartz.info), [Neocons](https://github.com/michaelklishin/neocons), [Langohr](https://github.com/michaelklishin/langohr), [Elastisch](https://github.com/clojurewerkz/elastisch) and several others.
 
 
@@ -28,7 +28,7 @@ If possible, try to explain what behavior you expected and why. Bonus points for
 
 ## Contributing
 
-Project Name uses [Leiningen 2](https://github.com/technomancy/leiningen/blob/master/doc/TUTORIAL.md). Make sure you have it installed and then run tests against
+Cassaforte uses [Leiningen 2](https://github.com/technomancy/leiningen/blob/master/doc/TUTORIAL.md). Make sure you have it installed and then run tests against
 supported Clojure versions using
 
     lein2 all test
