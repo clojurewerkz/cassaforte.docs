@@ -276,3 +276,7 @@ In order to limit results of your query, you can use limit:
 (cql/select :user_posts (limit 1))
 ;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
 ```
+
+## What to read next
+
+  * [Cassandra key concepts](/articles/cassandra_key_concepts.html) guide
