@@ -123,7 +123,7 @@ In Cassandra, there are `static` and `dynamic` column families. Static column
 families are simple, you specify a fixed schema for the column family, add
 data according to the schema, and alter whenever the application requires it.
 
-### Statis Tables
+### Static Tables
 
 For example, let's create a table called `users`.
 
