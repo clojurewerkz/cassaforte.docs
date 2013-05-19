@@ -69,7 +69,7 @@ In order to connect to Cassandra cluster, use:
   (:use clojurewerkz.cassaforte.query))
 
 ;; Will connect to 3 nodes in a cluster
-(cql/connect! ["node1" "node2" "node3" ])
+(cql/connect! ["node1" "node2" "node3"])
 ```
 
 ### Create and update Keyspaces
