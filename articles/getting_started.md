@@ -41,7 +41,7 @@ Cassaforte artifacts are released to Clojars.
 ### With Leiningen
 
 ```clojure
-[clojurewerkz/cassaforte "1.0.0-rc2"]
+[clojurewerkz/cassaforte "1.0.0-rc3"]
 ```
 
 It is recommended to stay up-to-date with new versions. New releases
