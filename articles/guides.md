@@ -23,6 +23,12 @@ This guide covers:
  * Using `cqlsh`
  * Using `cassandra-cli`
 
+### [Advanced Client Options](/articles/advanced_client_options.html) guide
+
+This guide covers:
+
+ * Reconnectoin
+ * Retries
 
 ### [Cassandra key concepts](/articles/cassandra_key_concepts.html)
 

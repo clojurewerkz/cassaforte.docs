@@ -280,4 +280,5 @@ In order to limit results of your query, you can use limit:
 ## What to read next
 
   * [Cassandra key concepts](/articles/cassandra_key_concepts.html) guide
+  * [Advanced Client Options](/articles/advanced_client_options.html) guide
   * [Troubleshooting](/articles/troubleshooting.html) guide
