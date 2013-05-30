@@ -15,6 +15,18 @@ We recommend that you read these guides, if possible, in this order:
 An overview of Cassaforte with a quick tutorial that helps you to get started with it. It should take about
 10 minutes to read and study the provided code examples
 
+### [Key Concepts](/articles/key_concepts.html)
+
+Key Concepts of Cassandra, pretty much a Glossary of terms circulating in Cassandra Community that may be
+foreign for newcomers.
+
+###  [Modelling Data](/articles/modelling_data.html)
+
+Guide explains how to model your data "Cassandra Way". There're several concepts that you can utilize to
+ease access to your data.
+
+
+
 ### [Troubleshooting Guide](/articles/troubleshooting.html)
 
 This guide covers:

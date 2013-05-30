@@ -65,11 +65,12 @@ In order to connect to Cassandra cluster, use:
 
 ```clojure
 (ns cassaforte.docs.examples
-  (:require clojurewerkz.cassaforte.cql)
-  (:use clojurewerkz.cassaforte.query))
+  (:require clojurewerkz.cassaforte.client)
+  (:use clojurewerkz.cassaforte.cql
+        clojurewerkz.cassaforte.query))
 
 ;; Will connect to 3 nodes in a cluster
-(cql/connect! ["node1" "node2" "node3"])
+(client/connect! ["node1" "node2" "node3"])
 ```
 
 ### Create and update Keyspaces
