@@ -1,5 +1,5 @@
 ---
-title: "Getting Started"
+title: "Getting Started with Clojure and Cassandra"
 layout: article
 ---
 
@@ -16,10 +16,7 @@ built-in deserialization mechanisms, or use helper functions that
 transform them into Clojure maps and sequences and saves you time.
 
 Cassaforte is intended to be used via the CQL interface. Thrift is not
-supported.  One of the frequently mentioned differences between Thrift
-and CQL protocols is support of supercolumns, since they were replaced
-in favor of [composite
-keys](https://issues.apache.org/jira/browse/CASSANDRA-3237) in CQL.
+supported.
 
 ## Adding Cassaforte Dependency To Your Project
 
@@ -29,6 +26,27 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 
 ```clojure
 [clojurewerkz/cassaforte "1.0.0-rc3"]
+```
+
+### With Maven
+
+Add Clojars repository definition to your `pom.xml`:
+
+``` xml
+<repository>
+  <id>clojars.org</id>
+  <url>http://clojars.org/repo</url>
+</repository>
+```
+
+And then the dependency:
+
+``` xml
+<dependency>
+  <groupId>clojurewerkz</groupId>
+  <artifactId>cassaforte</artifactId>
+  <version>1.0.0-rc3</version>
+</dependency>
 ```
 
 It is recommended to stay up-to-date with new versions. New releases
