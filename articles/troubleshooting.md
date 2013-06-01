@@ -172,3 +172,12 @@ you're using both Thrift and CQL interfaces.
 Here, we got 2 rows with keys 'Alex' and 'Robert' in return. You see that value of `post_id`, together
 with column name `body` is used as a composite key. Here, for example, `Alex Post 0:body`, will
 hold an actual value for `body`.
+
+
+## Moving to CQL
+
+If you're upgrading from older Cassandra versions and plan to use CQL3,
+start [here](http://www.datastax.com/dev/blog/thrift-to-cql3). If you
+want to keep using tables, created with CQL3 via Thrift interface
+(for example, for Hadoop/Cascading tasks), you can use
+[COMPACT STORAGE](https://issues.apache.org/jira/browse/CASSANDRA-4924).
