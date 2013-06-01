@@ -184,7 +184,8 @@ and change types of the existing ones:
                  (rename-column :username :name))
 ```
 
-## Store Values
+
+## Storing Values
 
 Even though Cassandra is mostly known for it's fault-tolerancy and
 performance, it can also store data.
@@ -213,20 +214,24 @@ refer to [working with data](TBD) guide.
    (cql/insert "users" {:name "Alex" :age (int 19)}))
 
 ```
-## Fetch Values
 
-CQL offers some querying opportunities. You can use `IN` queries, query
+
+## Fetching Values
+
+The real power of CQL comes in querying. You can use `IN` queries, query
 by range or an exact match. Let's populate our users table with some
 data and see what we can do.
 
 Most straightforward thing is to select all users:
 
 ```clojure
-(cql/insert :users {:name "Alex" :city "Munich" :age (int 19)})
-(cql/insert :users {:name "Robert" :city "Berlin" :age (int 25)})
-(cql/insert :users {:name "Sam" :city "San Francisco" :age (int 21)})
+(require '[clojurewerkz.cassaforte.cql :as cql])
 
-(cql/select :users)
+(cql/insert "users" {:name "Alex" :city "Munich" :age (int 19)})
+(cql/insert "users" {:name "Robert" :city "Berlin" :age (int 25)})
+(cql/insert "users" {:name "Sam" :city "San Francisco" :age (int 21)})
+
+(cql/select "users")
 ;; => [{:name "Robert", :age 25, :city "Berlin"}
        {:name "Alex", :age 19, :city "Munich"}
        {:name "Sam", :age 21, :city "San Francisco"}]
@@ -235,14 +240,18 @@ Most straightforward thing is to select all users:
 Select user by name:
 
 ```clojure
-(cql/select :users (where :name "Alex"))
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/select "users" (where :name "Alex"))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
 Using `IN` query, match any of the values given in vector:
 
 ```clojure
-(cql/select :users
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/select "users"
             (where :name [:in ["Alex" "Robert"]]))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
        {:name "Robert", :age 25, :city "Berlin"}]
@@ -257,17 +266,19 @@ Ordering is only possible when partition key is restricted by either
 exact match or `IN`. For example, having `user_posts`:
 
 ```clojure
-(cql/insert :user_posts
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/insert "user_posts"
             {:username "Alex"
              :post_id  "post1"
              :body     "first post body"})
 
-(cql/insert :user_posts
+(cql/insert "user_posts"
             {:username "Alex"
              :post_id  "post2"
              :body     "second post body"})
 
-(cql/insert :user_posts
+(cql/insert "user_posts"
             {:username "Alex"
              :post_id  "post3"
              :body     "third post body"})
@@ -278,8 +289,10 @@ want to get all the posts from user Alex and order them by `post_id`,
 it's entirely possible:
 
 ```clojure
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
 ;; For clarity, we select :post_id column only
-(cql/select :user_posts
+(cql/select "user_posts"
             (columns :post_id)
             (where :username "Alex")
             (order-by [:post_id :desc]))
@@ -291,7 +304,9 @@ it's entirely possible:
 Finally, you can use range queries to get a slice of data:
 
 ```clojure
-(cql/select :user_posts
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/select "user_posts"
             (columns :post_id)
             (where :username "Alex"
                    :post_id [> "post1"]
@@ -302,22 +317,54 @@ Finally, you can use range queries to get a slice of data:
 In order to limit results of your query, you can use limit:
 
 ```clojure
-(cql/select :user_posts (limit 1))
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/select "user_posts" (limit 1))
 ;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
 ```
 
-## Moving to CQL
 
-If you're upgrading from older Cassandra versions and plan to use CQL3,
-start [here](http://www.datastax.com/dev/blog/thrift-to-cql3). If you
-want to keep using tables, created with CQL3 via Thrift interface
-(for example, for Hadoop/Cascading tasks), you can use
-[COMPACT STORAGE](https://issues.apache.org/jira/browse/CASSANDRA-4924).
+## Prepared Statements
+
+TBD: what even are prepared statements
+
+Prepared statements in Cassaforte are evaluated by query DSL generates
+a query, replacing all the values with `?` signs. For example
+
+```clojure
+(require '[clojurewerkz.cassaforte.cql :as cql])
+
+(cql/insert "posts"
+            (values {:userid "user1"
+                     :posted_at "2012-01-01"
+                     :entry_title "Catcher in the rye"
+                     :content "Here goes content"}))
+```
+
+would generate
+
+```clojure
+["INSERT INTO posts (userid, posted_at, entry_title, content) VALUES(?, ?, ?, ?);"
+ ["user1" "2012-01-01" "Catcher in the rye" "Here goes content"]]
+```
+
+Cassaforte checks if query is already in local query cache. If it is, it returns
+prepared statement ID for the next step. Otherwise, query is sent to to Cassandra for
+processing, when Statement ID is returned, it's cached.
+
+Query ID is passed to the server along with values for the query.
+
+TBD
+
 
 
 ## Wrapping Up
 
-TBD
+Cassaforte provides a nice way to use CQL with Cassandra. You can manipulate
+keyspaces, column families, insert rows, perform queries, delete data and more.
+
+The rest of this documentation covers more features Cassaforte and Cassandra
+provide.
 
 
 ## What to read next
