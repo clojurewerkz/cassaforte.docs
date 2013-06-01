@@ -389,6 +389,6 @@ provide.
 
 ## What to read next
 
-  * [Key Cassandra Concepts](/articles/cassandra_concepts.html) guide
-  * [Advanced Client Options](/articles/advanced_client_options.html) guide
-  * [Troubleshooting](/articles/troubleshooting.html) guide
+  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Advanced Client Options](/articles/advanced_client_options.html)
+  * [Troubleshooting](/articles/troubleshooting.html)
