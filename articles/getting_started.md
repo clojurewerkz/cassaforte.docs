@@ -100,6 +100,8 @@ namespace. Various CQL helper functions are can be found in
 `clojurewerkz.cassaforte.query`.
 
 
+## Working with Keyspaces
+
 ### Creating and Updating Keyspaces
 
 Cassandra organizes data in keyspaces. They're somewhat similar to
