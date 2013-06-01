@@ -1,17 +1,46 @@
 ---
-title: "Cassandra key concepts"
+title: "Key Cassandra concepts"
 layout: article
 ---
 
-## Cassandra who?
+## About this guide
+
+This guide covers key concepts behind [Apache Cassandra](http://cassandra.apache.org).
+
+
+## Before We Start
 
 Some concepts, especially comparisons with relational databases are intentionally
-simplified in this guide. Purpose is not to teach anyone how to scale MySQL or any
-other relational data store, but rather contrast approaches.
+simplified in this guide. The goal is to make understanding what Cassandra has to offer
+easier and to contrast the approaches it takes compared to relational databases.
 
-Cassandra is a replicated and distributed. That implies that data is stored
-redundantly on multiple nodes, which makes an entire system more reliable. In case
-one node fails, data is still available for retrieval from the different node.
+
+## A Bit of History: Cassandra and Dynamo
+
+Cassandra is often referred as one of implementations of ideas in the
+[Dynamo
+Paper](http://www.allthingsdistributed.com/2007/10/amazons_dynamo.html).
+Some things, that are more applicable to Cassandra, will be covered in
+this guide. In order to understand the underlying concepts, reading
+the paper itself would be very valuable. Note that Cassandra in some
+ways is very different from Dynamo.
+
+Dynamo was arguably the first large scale data store to fully embrace the [CAP Theorem](http://en.wikipedia.org/wiki/CAP_theorem),
+which states that for the distributed system it's impossible to
+simultaneously provide Consistency, Availability and Partition Tolerance.
+Cassandra allows you to increase system availability by embracing so called
+[Eventual Consistency](http://www.allthingsdistributed.com/2008/12/eventually_consistent.html).
+Nevertheless, it is possible to get strong consistency, by trading off
+an increase in latency.
+
+
+
+## Cassandra is Distributed and Replicated
+
+Cassandra is a distributed data store and designed to be highly available. For
+that, it replicates data within the cluster. The data is stored
+redundantly on multiple nodes. In case one node fails, data is still
+available for retrieval from a different node or multiple nodes.
 
 Cassandra starts making most sense when your data is rather big. Because it
 was built for distribution, you can scale your reads and writes, and fine-tune and
@@ -19,13 +48,16 @@ manage your database `consistency` and `availability`. Cassandra handles network
 well, so even when your several nodes are unavailable for some time, you will still
 be able to easily recover from that.
 
+
+## Overview
+
 Any distributed system, be it a database, computing backend, or web application
 is facing several problems:
 
   * __Load Balancing__: if you have more than one node in the system, the load should
     be evenly distributed between the workers.
 
-  * __Membership problem__ is solved by two parts: _Service Discovery_ and _Failure Detection_.
+  * __Cluster Membership__ is solved by two parts: _Service Discovery_ and _Failure Detection_.
     Service Discovery comes into play when you set up a fresh node, add it to the cluster.
     Data gets replicated to that node and it starts receiving writes and serving reads.
     When the node has left the cluster, was taken down for maintenance, or shut down due
@@ -43,20 +75,8 @@ uses [DataStax java-driver](github.com/datastax/java-driver) underneath, which a
 you to connect to the cluster, discover nodes in the cluster, set up retry and load
 balancing policies, among other features.
 
-## Cassandra and Dynamo
 
-Cassandra is often referred as one of implementations inspired by [Dynamo Paper](http://www.allthingsdistributed.com/2007/10/amazons_dynamo.html). In order to understand underlying concepts, I suggest reading
-paper itself. Some things, that are more applicable to Cassandra, will be covered in this guide.
-
-When people talk about Dynamo, they often refer to [CAP Theorem](http://en.wikipedia.org/wiki/CAP_theorem),
-which states that for the distributed system it's impossible to
-simultaneously provide Consistency, Availability and Partition Tolerance.
-Cassandra allows you to increase system Availability by  having so called
-[Eventual Consistency](http://www.allthingsdistributed.com/2008/12/eventually_consistent.html).
-Nevertheless, it is possible want to get strong consistency, by cost of
-an increased latency.
-
-## Key concepts
+## Key Terms
 
 If you're familiar with Cassandra, you may want to skip this section.
 Here we'll mention Cassandra-specific concepts, that may be not familiar
@@ -112,18 +132,35 @@ Virtual Nodes allow you to go even further, by splitting the Ring into the large
 amount of chunks. Each node gets configured, depending on how many Virtual Nodes
 it may hold, and moving data becomes even easier.
 
-## Column Families
 
-Column family is a container for Rows, that is somewhat similar to the Table
-in relational database. Each column family has a name, which it is referenced
-by. Name consists of alphanumeric characters, starting with a letter. In
-this guide, terms Column Family and Table will be used interchangeably.
+## Data Model
 
-In Cassandra, there are `static` and `dynamic` column families. Static column
+Unlike Dynamo, which is a pure key/value store, Cassandra's data model
+is heavily influenced by Google's [Big
+Table](http://static.googleusercontent.com/external_content/untrusted_dlcp/research.google.com/es//archive/bigtable-osdi06.pdf)
+data model with column families.
+
+### Column Families
+
+A column family is a container for rows, that is somewhat similar to a table
+in a relational database. Each column family has a name, which it is referenced
+by. In this guide, terms column family and table will be used interchangeably.
+
+Cassandra has `static` and `dynamic` column families. Static column
 families are simple, you specify a fixed schema for the column family, add
 data according to the schema, and alter whenever the application requires it.
 
-## Futher reading
 
-If you want to learn more about how Column Families, [Modelling Data](/articles/modelling_data.html) guide
-is for you.
+## Wrapping Up
+
+Cassandra is heavily influenced by the Dynamo paper and Big Table's data model
+and combines many prominent ideas in distributed system research.
+It provides a way to tune CAP properties however the developer sees fit.
+
+
+## What to Read Next
+
+  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Data Modelling](/articles/modelling_data.html)
+  * [Advanced Client Options](/articles/advanced_client_options.html)
+  * [Troubleshooting](/articles/troubleshooting.html)
