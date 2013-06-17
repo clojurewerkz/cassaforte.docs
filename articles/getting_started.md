@@ -25,7 +25,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 ### With Leiningen
 
 ```clojure
-[clojurewerkz/cassaforte "1.0.0-rc3"]
+[clojurewerkz/cassaforte "1.0.0-rc4"]
 ```
 
 ### With Maven
@@ -45,7 +45,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.0.0-rc3</version>
+  <version>1.0.0-rc4</version>
 </dependency>
 ```
 
