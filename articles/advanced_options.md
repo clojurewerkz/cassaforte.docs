@@ -5,16 +5,17 @@ layout: article
 
 ## About this guide
 
-This guide is useful for getting an application ready for production usage. It will address
+This guide covers client settings most relevant in production settings. It will address
 issues with reconnection, load-balancing, retries, compression, tunable write/read consistency
 levels and so on.
 
+
 ## Reconnection
 
-When connection to the host has failed, it is very important to understand further possibilities.
-Reconnection will be scheduled according to the given reconnection policy.
+When the network connection fails, there is more than one way to handle it.
+Cassaforte can schedule reconnection according to the given reconnection policy.
 
-Internally, DataStax driver receives and distributes notifications Cluster detects that node
+Internally, the DataStax driver receives and distributes notifications Cluster detects that node
 is up or down via StateListener. At any given point in time it is possible to check wether host
 is up or down by checking `clojurewerkz.cassaforte.client/get-hosts` `is-up` key.
 

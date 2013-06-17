@@ -223,8 +223,8 @@ statements.
 
 Prepared statement is parsed on the database side only once, and
 stored for further evaluation, during which only prepared statement id
-is transferred. If you want to learn more about prepared statements,
-refer to [working with data](TBD) guide.
+is transferred. Prepared statements will be covered in more detail
+in the rest of the guides.
 
 ```clojure
 (require '[clojurewerkz.cassaforte.cql :as cql])
