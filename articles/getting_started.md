@@ -10,13 +10,12 @@ basic information required to get you up and running.
 
 ## Overview
 
-Cassaforte provides you with a set of abstractions that can get you to
-any level: you can go ahead and operate byte-buffers yourself, use
-built-in deserialization mechanisms, or use helper functions that
-transform them into Clojure maps and sequences and saves you time.
-
-Cassaforte is intended to be used via the CQL interface. Thrift is not
+Cassaforte is a Clojure Cassandra client built around CQL. Thrift API is not
 supported.
+
+Although Cassaforte lets you fiddle with byte buffers and custom serialization, it is
+a high level client by design.
+
 
 ## Adding Cassaforte Dependency To Your Project
 
