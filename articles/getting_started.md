@@ -72,26 +72,53 @@ start_native_transport: true
 
 ## Connecting To Cassandra
 
-`clojurewerkz.cassaforte.cql/connect!` function connects to Cassandra:
+If you're connecting to the single cluster/keyspace, you should use `clojurewerkz.cassaforte.cql/connect!` function to connect to Cassandra.
+It will set `*default-cluster*` and `*default-session*` for client and use them for all the operations later on. Use `clojurewerkz.cassaforte.cql`
+namespace for queries, all operations in this namespace will use a default session (or session you provide in a binding).
 
-``` clojure
+```clojure
 (ns cassaforte.docs.examples
-  (:require [clojurewerkz.cassaforte.client :as c]))
+  (:require [clojurewerkz.cassaforte.client :as client]))
 
 ;; Will connect to localhost
-(c/connect! "127.0.0.1")
+(client/connect! "127.0.0.1")
 ```
 
 In order to connect to multiple Cassandra cluster nodes, use:
 
 ```clojure
 (ns cassaforte.docs.examples
-  (:require [clojurewerkz.cassaforte.client :as c]))
+  (:require [clojurewerkz.cassaforte.client :as client])
+  (:use clojurewerkz.cassaforte.cql))
 
 ;; Will connect to 3 nodes in a cluster
-(c/connect! ["127.0.0.1" "localhost" "another.node.local"])
+(client/connect! ["127.0.0.1" "localhost" "another.node.local"])
+
+;; Default session is used for the query
+(insert :users {:name "Alex" :city "Munich"})
 ```
 
+## Connecting to multiple clusters/keyspaces
+
+If you want to connect to multiple clusters, or have several keyspaces you're working with simultaneously, you should use `clojurewerkz.cassaforte.multi.cql`
+namespace for all the operations. In order to make a connection, use `client/build-cluster` and `client/connect` functions to create a `Cluster` and `Session`
+instance, correspondingly.
+
+```clj
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as client])
+  (:use clojurewerkz.cassaforte.multi.cql))
+
+;; Build the cluster
+(def cluster (client/build-cluster {:contact-points ["127.0.0.1"]
+                                    :port 19042}))
+
+;; Connect to the cluster, define a session
+(def session (client/connect :my_keyspace))
+
+;; Pass session explicitly
+(insert session :users {:name "Alex" :city "Munich"})
+```
 ## Key Namespaces
 
 Main query execution interface is in the `clojurewerkz.cassaforte.cql`
