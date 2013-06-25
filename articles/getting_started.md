@@ -119,12 +119,30 @@ instance, correspondingly.
 ;; Pass session explicitly
 (insert session :users {:name "Alex" :city "Munich"})
 ```
+
 ## Key Namespaces
 
 Main query execution interface is in the `clojurewerkz.cassaforte.cql`
 namespace. Various CQL helper functions are can be found in
 `clojurewerkz.cassaforte.query`.
 
+## Executing String queries
+
+In order to execute query from the String, you can use `execute` method
+directly. We tried our best to provide a DSL that gets out of your way, but
+from time to time you may want to write your own CQL query and execute it
+as it is, especially useful while working with advanced concepts and queries.
+
+```clj
+;; As it was mentioned before, you can omit Session argument, default one will be used instead
+(client/execute "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+
+;; You can pass Session argument explicitly:
+(client/execute session "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+```
+
+If you want to build your own queries in runtime, you can refer our [building custom queries](TBD)
+guide.
 
 ## Working with Keyspaces
 
