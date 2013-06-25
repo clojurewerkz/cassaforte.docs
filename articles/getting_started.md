@@ -8,8 +8,6 @@ layout: article
 This guide is will allow you to quick-start with Cassaforte. It includes the
 basic information required to get you up and running.
 
-## Overview
-
 Cassaforte is a Clojure Cassandra client built around CQL. Thrift API is not
 supported.
 
@@ -17,17 +15,17 @@ Although Cassaforte lets you fiddle with byte buffers and custom serialization, 
 a high level client by design.
 
 
-## Adding Cassaforte Dependency To Your Project
+## Dependency information
 
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte).
 
-### With Leiningen
+__With Leiningen__
 
 ```clojure
 [clojurewerkz/cassaforte "1.0.0-rc5"]
 ```
 
-### With Maven
+__With Maven__
 
 Add Clojars repository definition to your `pom.xml`:
 
@@ -51,14 +49,15 @@ And then the dependency:
 It is recommended to stay up-to-date with new versions. New releases
 and important changes are announced [@ClojureWerkz](http://twitter.com/clojurewerkz).
 
-## Supported Clojure Versions
+__Supported Clojure Versions__
 
 Cassaforte is built from the ground up for Clojure 1.4 and later.
 
 
-## Supported Cassaforte Versions
+__Supported Cassaforte Versions__
 
 Cassaforte requires Cassandra 1.2+.
+
 
 
 
@@ -74,7 +73,8 @@ start_native_transport: true
 
 If you're connecting to the single cluster/keyspace, you should use `clojurewerkz.cassaforte.cql/connect!` function to connect to Cassandra.
 It will set `*default-cluster*` and `*default-session*` for client and use them for all the operations later on. Use `clojurewerkz.cassaforte.cql`
-namespace for queries, all operations in this namespace will use a default session (or session you provide in a binding).
+namespace for queries, all operations in this namespace will use a default session (or session you provide in a binding). You can also find
+various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`.
 
 ```clojure
 (ns cassaforte.docs.examples
@@ -120,13 +120,7 @@ instance, correspondingly.
 (insert session :users {:name "Alex" :city "Munich"})
 ```
 
-## Key Namespaces
-
-Main query execution interface is in the `clojurewerkz.cassaforte.cql`
-namespace. Various CQL helper functions are can be found in
-`clojurewerkz.cassaforte.query`.
-
-## Executing String queries
+## Executing raw CQL queries
 
 In order to execute query from the String, you can use `execute` method
 directly. We tried our best to provide a DSL that gets out of your way, but
@@ -144,9 +138,7 @@ as it is, especially useful while working with advanced concepts and queries.
 If you want to build your own queries in runtime, you can refer our [building custom queries](TBD)
 guide.
 
-## Working with Keyspaces
-
-### Creating and Updating Keyspaces
+## Creating and Updating Keyspaces
 
 Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases.  Typically, you need one keyspace
@@ -190,8 +182,7 @@ Before you can use a keyspace, you have to switch to it with `clojurewerkz.cassa
 
 You can learn more about working with keyspaces in [working with keyspaces guide](TBD)
 
-
-### Creating and Updating Column Families
+## Creating and Updating Tables
 
 Cassandra is a column-oriented database. Column Families contain
 multiple columns, each of which has a name, a value and a timestamp,
