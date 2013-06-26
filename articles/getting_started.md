@@ -9,11 +9,8 @@ This guide is will allow you to quick-start with Cassaforte. It includes the
 basic information required to get you up and running.
 
 Cassaforte is a Clojure Cassandra client built around CQL. Thrift API is not
-supported.
-
-Although Cassaforte lets you fiddle with byte buffers and custom serialization, it is
-a high level client by design.
-
+supported. Cassaforte provides DSL for generating and executing CQL queries,
+but also allows you to fiddle with dynamic query composition.
 
 ## Dependency information
 
@@ -138,15 +135,40 @@ as it is, especially useful while working with advanced concepts and queries.
 If you want to build your own queries in runtime, you can refer our [building custom queries](TBD)
 guide.
 
+## Working with Cassaforte
+
+`clojurewerkz.cassaforte.client` is a base namespace for connecting to Cassandra clusters,
+configuring your cluster connection, tuning things like Load Balancing, Retries, consistency
+and reconnection, rendering queries generated using the DSL, preparing them, working with
+asyncronous results.
+
+`clojurewerkz.cassaforte.cql` is a DSL for all CQL operations, that provides a high-level
+API for key/value, keyspace, column family, lazy operations, pagination and iterating over
+an entire column family.
+
+`clojurewerkz.cassaforte.multi.cql` is a DSL for all CQL operations, that provides same exact
+set of operations as `clojurewerkz.cassaforte.cql`, but for work with multiple clusters/keyspaces.
+
+`clojurewerkz.cassaforte.query` CQL operations interface, prepared statement implementation,
+convenience functions for key operations built on top of CQL. Includes versions of `cassaforte.cql`
+functions that take database as an explicit argument. Use these namespace when you need to work
+with multiple databases or manage database and connection lifecycle explicitly.
+
+`clojurewerkz.cassaforte.embedded` provides facility functions for working with an embedded
+Cassandra server, which is very useful for testing your application without having a C*
+cluster running and for cases when application requires Standalone Cassandra without
+additional installation.
+
+We recommend `:require` for `clojurewerkz.cassaforte.cql` namespace (or `clojurewerkz.cassaforte.multi.cql`
+in case you want to work with multiple clusters/keyspaces at a time), and `:use` for
+`clojurewerkz.cassaforte.query` to keep your namespaces non-polluted. However, you can see
+what fits your application better.
+
 ## Creating and Updating Keyspaces
 
 Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases.  Typically, you need one keyspace
 per application.
-
-We recommend `:require` for `clojurewerkz.cassaforte.cql` namespace,
-and `:use` for `clojurewerkz.cassaforte.query` to keep your namespaces
-non-polluted. However, you can see what fits your application better.
 
 ```clojure
 (require '[clojurewerkz.cassaforte.cql :as cql])
@@ -189,10 +211,8 @@ multiple columns, each of which has a name, a value and a timestamp,
 and is referenced by a row key. Column families are roughly equivalent
 to tables in relational databases.
 
-In order to create a column family,
-use `clojurewerkz.cassaforte.cql/create-table` or
-`clojurewerkz.cassaforte.cql/create-column-family` (both are aliases
-for the same function):
+In order to create a column family, use `create-table` or `create-column-family`
+(both are aliases for the same function):
 
 In order to create a Column Family with a single key, simply pass
 primary key name as a keyword in `primary-key` clause:
@@ -288,8 +308,8 @@ Most straightforward thing is to select all users:
 
 (cql/select "users")
 ;; => [{:name "Robert", :age 25, :city "Berlin"}
-       {:name "Alex", :age 19, :city "Munich"}
-       {:name "Sam", :age 21, :city "San Francisco"}]
+;;       {:name "Alex", :age 19, :city "Munich"}
+;;       {:name "Sam", :age 21, :city "San Francisco"}]
 ```
 
 Select user by name:
@@ -425,5 +445,6 @@ provide.
 ## What to read next
 
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Data Modelling](/articles/data_modelling.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
