@@ -214,7 +214,7 @@ you can use `force-prepared-queries` connection option.
 
 ### Counters
 
-Cassandra has a powerful concept, Distributed Counters. Counter columns provide an efficient
+Cassandra has a powerful concept, __Distributed Counters__. Counter columns provide an efficient
 way to count or sum anything you need. It is achieved by using atomic increment/decrement operations
 on values.
 
@@ -255,7 +255,7 @@ In order to modify (increment or decrement) counter, you can use the following s
 
 Which will execute following CQL queries, correspondingly:
 
-```cql
+```sql
 UPDATE user_counters SET user_count = user_count + 5 WHERE name = 'asd';
 UPDATE user_counters SET user_count = user_count - 5 WHERE name = 'asd';
 ```
