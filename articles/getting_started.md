@@ -22,6 +22,9 @@ __With Leiningen__
 [clojurewerkz/cassaforte "1.0.0-rc5"]
 ```
 
+Please note that Cassaforte works with Clojure versions starting from 1.4, to satisfy other
+dependency requirements.
+
 __With Maven__
 
 Add Clojars repository definition to your `pom.xml`:
@@ -111,7 +114,7 @@ instance, correspondingly.
                                     :port 19042}))
 
 ;; Connect to the cluster, define a session
-(def session (client/connect :my_keyspace))
+(def session (client/connect cluster :my_keyspace))
 
 ;; Pass session explicitly
 (insert session :users {:name "Alex" :city "Munich"})
