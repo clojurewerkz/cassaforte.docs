@@ -18,9 +18,14 @@ An overview of Cassaforte with a quick tutorial that helps you to get started wi
 
 ###  [Key/Value Operations](/articles/kv.html)
 
-Key/value operations in-depth guide. Explains how to insert, query, update and delete values, set
-consistency level on a per-query basis, how to use collection types, use counter columns and perform
-batch operations.
+Key/value operations in-depth guide. Covers topics such as:
+
+  * Inserting values
+  * Tuning consistency/availability
+  * Timestampls and TTL
+  * Prepared Statements
+  * Collection Types
+  * Counter Columns
 
 ### [Key Cassandra Concepts](/articles/cassandra_concepts.html)
 
