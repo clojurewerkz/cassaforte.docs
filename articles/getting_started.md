@@ -12,13 +12,17 @@ Cassaforte is a Clojure Cassandra client built around CQL. Thrift API is not
 supported. Cassaforte provides DSL for generating and executing CQL queries,
 but also allows you to fiddle with dynamic query composition.
 
+All the examples in this and all other Cassaforte guides will be given in form
+of explanatory text, followed by Clojure example and raw CQL example, where
+it is applicable.
+
 ## Dependency information
 
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte).
 
 __With Leiningen__
 
-```clojure
+```clj
 [clojurewerkz/cassaforte "1.0.0-rc5"]
 ```
 
@@ -76,7 +80,7 @@ It will set `*default-cluster*` and `*default-session*` for client and use them 
 namespace for queries, all operations in this namespace will use a default session (or session you provide in a binding). You can also find
 various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`.
 
-```clojure
+```clj
 (ns cassaforte.docs.examples
   (:require [clojurewerkz.cassaforte.client :as client]))
 
@@ -86,10 +90,11 @@ various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`
 
 In order to connect to multiple Cassandra cluster nodes, use:
 
-```clojure
+```clj
 (ns cassaforte.docs.examples
   (:require [clojurewerkz.cassaforte.client :as client])
-  (:use clojurewerkz.cassaforte.cql))
+  (:use clojurewerkz.cassaforte.cql
+        clojurewerkz.cassaforte.query))
 
 ;; Will connect to 3 nodes in a cluster
 (client/connect! ["127.0.0.1" "localhost" "another.node.local"])
@@ -107,7 +112,8 @@ instance, correspondingly.
 ```clj
 (ns cassaforte.docs.examples
   (:require [clojurewerkz.cassaforte.client :as client])
-  (:use clojurewerkz.cassaforte.multi.cql))
+  (:use clojurewerkz.cassaforte.multi.cql
+        clojurewerkz.cassaforte.query))
 
 ;; Build the cluster
 (def cluster (client/build-cluster {:contact-points ["127.0.0.1"]
@@ -173,13 +179,16 @@ Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases.  Typically, you need one keyspace
 per application.
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(create-keyspace "cassaforte_keyspace"
+                 (with {:replication
+                        {:class "SimpleStrategy"
+                         :replication_factor 1 }}))
+```
 
-(cql/create-keyspace "cassaforte_keyspace"
-                     (with {:replication
-                            {:class "SimpleStrategy"
-                             :replication_factor 1 }}))
+```sql
+CREATE KEYSPACE "cassaforte_keyspace"
+  WITH replication = {'class' : 'SimpleStrategy', 'replication_factor' : 1};
 ```
 
 This will create new CQL keyspace with simple replication strategy and
@@ -187,22 +196,30 @@ replication factor of 1. This is not advised for production.
 
 You can modify keyspace settings with `clojurewerkz.cassaforte.cql/alter-keyspace`:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(alter-keyspace "cassaforte_keyspace"
+                (with {:durable_writes false
+                       :replication    {:class "NetworkTopologyStrategy"
+                                        :dc1 1
+                                        :dc2 2}}))
+```
 
-(cql/alter-keyspace "cassaforte_keyspace"
-                    (with {:durable_writes false
-                           :replication    {:class "NetworkTopologyStrategy"
-                                            :dc1 1
-                                            :dc2 2}}))
+```sql
+ALTER KEYSPACE "cassaforte_keyspace"
+  WITH durable_writes = false
+    AND replication = {'dc1' : 1,
+                       'dc2' : 2,
+                       'class' : 'NetworkTopologyStrategy'};
 ```
 
 Before you can use a keyspace, you have to switch to it with `clojurewerkz.cassaforte.xql/use-keyspace`:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(use-keyspace "cassaforte_keyspace")
+```
 
-(cql/use-keyspace "cassaforte_keyspace")
+```sql
+USE "cassaforte_keyspace";
 ```
 
 You can learn more about working with keyspaces in [working with keyspaces guide](TBD)
@@ -220,48 +237,74 @@ In order to create a column family, use `create-table` or `create-column-family`
 In order to create a Column Family with a single key, simply pass
 primary key name as a keyword in `primary-key` clause:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(create-table "users"
+              (column-definitions {:name :varchar
+                                   :age  :int
+                                   :primary-key [:name]}))
+```
 
-(cql/create-table "users"
-                  (column-definitions {:name :varchar
-                                       :age  :int
-                                       :primary-key [:name]}))
+```sql
+CREATE TABLE "users" (age int,
+                      name varchar,
+                      PRIMARY KEY (name));
 ```
 
 In order to create a composite key, pass a vector holding names of
 columns that will become keys:
 
-```clojure
-(cql/create-table "user_posts"
-                  (column-definitions {:username :varchar
-                                       :post_id  :varchar
-                                       :body     :text
-                                       :primary-key [:username :post_id]}))
+```clj
+(create-table "user_posts"
+              (column-definitions {:username :varchar
+                                   :post_id  :varchar
+                                   :body     :text
+                                   :primary-key [:username :post_id]}))
 ```
 
+```sql
+CREATE TABLE "user_posts" (username varchar,
+                           body text,
+                           post_id varchar,
+                           PRIMARY KEY (username, post_id));
+```
 The user post record will now be identified by `username` and `post_id`.
 
 In order to update an existing column family, use `clojurewerkz.cassaforte.cql/alter-table` or
-`cql/alter-column-family`. You can add new columns and rename
-and change types of the existing ones:
+`cql/alter-column-family`. You can add new columns and rename and change types of the
+existing ones:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+Change the type of a column to integer:
 
-;; Change the type of a column to integer
-(cql/alter-table "users"
-                 (alter-column :post_id :int))
-
-;; Add an integer column
-(cql/alter-table "users"
-                 (add-column :age :integer))
-
-;; Rename a column
-(cql/alter-table "users"
-                 (rename-column :username :name))
+```clj
+(alter-table "users"
+             (alter-column :post_id :int))
 ```
 
+```sql
+ALTER TABLE "users" ALTER post_id TYPE int;
+```
+
+Add an integer column:
+
+```clj
+(alter-table "users"
+             (add-column :age :integer))
+```
+
+```sql
+ALTER TABLE "users" ADD age integer;
+```
+
+Rename a column:
+
+```clj
+(alter-table "users"
+             (rename-column :username :name))
+```
+
+```sql
+ALTER TABLE "users" RENAME username TO name;
+```
 
 ## Storing Values
 
@@ -271,10 +314,12 @@ performance, it can also store data.
 You can insert simple values into your Column Family using
 the `clojurewerkz.cassaforte.cql/insert` function:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(insert "users" {:name "Alex" :age (int 19)})
+```
 
-(cql/insert "users" {:name "Alex" :age (int 19)})
+```sql
+INSERT INTO "users" (name, age) VALUES ('Alex', 19);
 ```
 
 However, for performance reasons we highly recommend using prepared
@@ -285,14 +330,13 @@ stored for further evaluation, during which only prepared statement id
 is transferred. Prepared statements will be covered in more detail
 in the rest of the guides.
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/prepared
-   (cql/insert "users" {:name "Alex" :age (int 19)}))
-
+```clj
+(client/prepared
+   (insert "users" {:name "Alex" :age (int 19)}))
 ```
 
+You can find an elaborate guide on Prepared Statements in
+[Key Value Operations](http://clojurecassandra.info/articles/kv.html#toc_4) guide.
 
 ## Fetching Values
 
@@ -302,37 +346,47 @@ data and see what we can do.
 
 Most straightforward thing is to select all users:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
+```clj
+(insert "users" {:name "Alex" :city "Munich" :age (int 19)})
+(insert "users" {:name "Robert" :city "Berlin" :age (int 25)})
+(insert "users" {:name "Sam" :city "San Francisco" :age (int 21)})
 
-(cql/insert "users" {:name "Alex" :city "Munich" :age (int 19)})
-(cql/insert "users" {:name "Robert" :city "Berlin" :age (int 25)})
-(cql/insert "users" {:name "Sam" :city "San Francisco" :age (int 21)})
-
-(cql/select "users")
+(select "users")
 ;; => [{:name "Robert", :age 25, :city "Berlin"}
 ;;       {:name "Alex", :age 19, :city "Munich"}
 ;;       {:name "Sam", :age 21, :city "San Francisco"}]
 ```
 
+```sql
+INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
+INSERT INTO "users" (name, city, age) VALUES ('Robert', 'Berlin', 25);
+INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
+
+SELECT * FROM "users";
+```
+
 Select user by name:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/select "users" (where :name "Alex"))
+```clj
+(select "users" (where :name "Alex"))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
+```
+
+```sql
+SELECT * FROM "users" WHERE name = 'Alex';
 ```
 
 Using `IN` query, match any of the values given in vector:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/select "users"
-            (where :name [:in ["Alex" "Robert"]]))
+```clj
+(select "users"
+        (where :name [:in ["Alex" "Robert"]]))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
-       {:name "Robert", :age 25, :city "Berlin"}]
+;;     {:name "Robert", :age 25, :city "Berlin"}]
+```
+
+```sql
+SELECT * FROM "users" WHERE name IN ('Alex', 'Robert');
 ```
 
 Ordering and range queries are not as straightforward as they are
@@ -343,85 +397,84 @@ had to take that approach.
 Ordering is only possible when partition key is restricted by either
 exact match or `IN`. For example, having `user_posts`:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/insert "user_posts"
-            {:username "Alex"
-             :post_id  "post1"
-             :body     "first post body"})
-
-(cql/insert "user_posts"
-            {:username "Alex"
-             :post_id  "post2"
-             :body     "second post body"})
-
-(cql/insert "user_posts"
-            {:username "Alex"
-             :post_id  "post3"
-             :body     "third post body"})
+```clj
+(insert "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
+(insert "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
+(insert "user_posts" { :username "Alex" :post_id "post3" :body "third post body"})
 ```
 
 You can't order all the posts by post_id. But if you say that you
 want to get all the posts from user Alex and order them by `post_id`,
 it's entirely possible:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
+```clj
 ;; For clarity, we select :post_id column only
-(cql/select "user_posts"
-            (columns :post_id)
-            (where :username "Alex")
-            (order-by [:post_id :desc]))
+(select "user_posts"
+        (columns :post_id)
+        (where :username "Alex")
+        (order-by [:post_id :desc]))
+
 ;; => [{:post_id "post3"}
-       {:post_id "post2"}
-       {:post_id "post1"}]
+;;     {:post_id "post2"}
+;;     {:post_id "post1"}]
+```
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+  ORDER BY post_id desc;
 ```
 
 Finally, you can use range queries to get a slice of data:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/select "user_posts"
-            (columns :post_id)
-            (where :username "Alex"
-                   :post_id [> "post1"]
-                   :post_id [< "post3"]))
+```clj
+(select "user_posts"
+        (columns :post_id)
+        (where :username "Alex"
+               :post_id [> "post1"]
+               :post_id [< "post3"]))
 ;; => [{:post_id "post2"}]
+```
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+    AND post_id > 'post1'
+    AND post_id < 'post3';
 ```
 
 In order to limit results of your query, you can use limit:
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/select "user_posts" (limit 1))
+```clj
+(select "user_posts" (limit 1))
 ;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
+```
+
+```sql
+SELECT * FROM "user_posts" LIMIT 1;
 ```
 
 
 ## Prepared Statements
 
-TBD: what even are prepared statements
+You can find an elaborate guide on Prepared Statements in
+[Key Value Operations](http://clojurecassandra.info/articles/kv.html#toc_4) guide.
 
 Prepared statements in Cassaforte are evaluated by query DSL generates
 a query, replacing all the values with `?` signs. For example
 
-```clojure
-(require '[clojurewerkz.cassaforte.cql :as cql])
-
-(cql/insert "posts"
-            (values {:userid "user1"
-                     :posted_at "2012-01-01"
-                     :entry_title "Catcher in the rye"
-                     :content "Here goes content"}))
+```clj
+(client/prepared
+ (insert "posts"
+         (values {:userid "user1"
+                  :posted_at "2012-01-01"
+                  :entry_title "Catcher in the rye"
+                  :content "Here goes content"})))
 ```
 
 would generate
 
-```clojure
+```clj
 ["INSERT INTO posts (userid, posted_at, entry_title, content) VALUES(?, ?, ?, ?);"
  ["user1" "2012-01-01" "Catcher in the rye" "Here goes content"]]
 ```
@@ -431,10 +484,6 @@ prepared statement ID for the next step. Otherwise, query is sent to to Cassandr
 processing, when Statement ID is returned, it's cached.
 
 Query ID is passed to the server along with values for the query.
-
-TBD
-
-
 
 ## Wrapping Up
 
@@ -448,6 +497,7 @@ provide.
 ## What to read next
 
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Key Value Operations](/articles/kv.html)
   * [Data Modelling](/articles/data_modelling.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
