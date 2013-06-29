@@ -193,6 +193,106 @@ approach your data.
 
 That should give you a basic idea on how to model things.
 
+## Collection Columns
+
+In relational databases, there're no collection datatypes on a value level. Usually this problem
+is solved by creating an additional table, for example, if you have a table `users`, and
+each user can have more than one phone number, you create another table, `user_phone_numbers`, which
+has a foreign key `user_id`, that holds string values for telephones. From time to time this may be
+useful in Cassandra, too, especially if you want to attach some metadata to each entry, and use
+additional indexes on metadata for flexible queries.
+
+Nevertheless, there's one more possibility in Cassandra. You can use nested `list`, `set` or `map`
+column types to store values related to certain entity. There're no internal querying possibilities
+for collection types (you won't be able to find user by one of his email adresses this way).
+
+For example, if you want to model an address book, you can create `users` table with and use
+`emails` as a `list` type column:
+
+```clj
+(create-table :users
+              (column-definitions
+               {:name :varchar
+                :emails (list-type :varchar)
+                :primary-key [:name]}))
+```
+
+```sql
+CREATE TABLE users (name varchar,
+                    emails list<varchar>,
+                    PRIMARY KEY (name));
+```
+
+You may have noticed that we had to specify value type for list as `list<varchar>`, where
+`list` specifies that there may be more than one value stored and `varchar` specifies a type of
+stored value.
+
+Now, you can insert users with their emails:
+
+```clj
+(insert :users
+        {:name "Alex"
+         :emails ["alex@gmail.com" "alexp@clojurewerkz.org" "alex@coffeenco.de"]})
+```
+
+```sql
+INSERT INTO users (test_list, name)
+  VALUES (['alex@gmail.com', 'alexp@clojurewerkz.org', 'alex@coffeenco.de'], 'Alex');
+```
+
+If you query users table, you'll see that emails are stored in an array internally:
+
+```
+ name | emails
+------+-------------------------------------------------------------
+ Alex | [alex@gmail.com, alexp@clojurewerkz.org, alex@coffeenco.de]
+```
+
+It is possible to perform usual list operations, such as prepending, appending and deleting values
+in the list. `set` is working in a manner very similar to list, with the only exception that sets
+store only single value in case of duplicates. Which means that if you try to append same value
+to the list several times, it will be only written once.
+
+Alternatively, you can chose to use `map` type. Maps in Cassandra are associative arrays, that
+hold a key and a value associated with it. Speaking of an address book, you can chose to use
+`map` type for holding emails, phone numbers and addresses for the user:
+
+```clj
+(create-table :users
+              (column-definitions
+               {:name :varchar
+                :contact_info (map-type :varchar :varchar)
+                :primary-key [:name]}))
+```
+
+```sql
+CREATE TABLE users (name varchar,
+                    contact_info map<varchar, varchar>,
+                    PRIMARY KEY (name));
+```
+
+Now, you can insert maps holding values:
+
+```clj
+(insert :users
+        {:name "Alex"
+         :contact_info {:email "alex@gmail.com" :phone "+1 111 222 333" :address "Sierra Drive 212, 01002"}})
+
+```sql
+INSERT INTO users (name, contact_info)
+  VALUES ('Alex', {'phone' : '+1 111 222 333',
+                   'email' : 'alex@gmail.com',
+                   'address' : 'Sierra Drive 212, 01002'});
+```
+
+Now, `contact_info` values will be stored in a map:
+
+```
+ name | emails
+------+----------------------------------------------------------------------------------
+ Alex | {phone: +1 111 222 333, email: alex@gmail.com, address: Sierra Drive 212, 01002}
+```
+
 ## General advices
 
 Good things to remember while modelling your data would be:
