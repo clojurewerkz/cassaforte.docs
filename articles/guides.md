@@ -26,6 +26,10 @@ Key/value operations in-depth guide. Covers topics such as:
   * Prepared Statements
   * Collection Types
   * Counter Columns
+  * Range queries
+  * Pagination
+  * Filtering
+  * Ordering
 
 ### [Key Cassandra Concepts](/articles/cassandra_concepts.html)
 
@@ -35,8 +39,14 @@ Key/value operations in-depth guide. Covers topics such as:
 
 ###  [Data Modelling](/articles/data_modelling.html)
 
-Introduction to how to model your data "the Cassandra Way" with a few examples.
+Introduction to how to model your data "the Cassandra Way" with a few examples, this guide
+covers topics such as:
 
+  * Static tables
+  * Dynamic tables
+  * Compound keys
+  * Collection columns
+  * Modelling best practices
 
 ### [Advanced Client Options](/articles/advanced_client_options.html) guide
 

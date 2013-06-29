@@ -7,15 +7,16 @@ layout: article
 
 This guide explains more complex Key/Value operations, such as
 
-  * Insertion, querying and deletion of values
-  * Indexing
-  * Consistency levels
-  * Retry Policies
-  * TTL for entries
-  * Batch Operations
-  * Counters
-  * Range Queries
-  * Collection types
+  * Inserting values
+  * Tuning consistency/availability
+  * Timestampls and TTL
+  * Prepared Statements
+  * Collection Types
+  * Counter Columns
+  * Range queries
+  * Pagination
+  * Filtering
+  * Ordering
 
 This guide relies on things that are also mentioned in [Advanced Client Options](/articles/advanced_client_options.html) guide.
 
