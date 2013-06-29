@@ -259,3 +259,210 @@ Which will execute following CQL queries, correspondingly:
 UPDATE user_counters SET user_count = user_count + 5 WHERE name = 'asd';
 UPDATE user_counters SET user_count = user_count - 5 WHERE name = 'asd';
 ```
+
+### Querying
+
+You get good query possibilities in Cassandra, but you have to model your data to be able to
+build flexible queries against your dataset. It is important to pick your parition key wisely,
+since it's the core of all the queries. To learn more about data modelling practices, refer
+to [Data Modelling](/articles/data_modelling.html) guide. There you can learn more about picking
+a partition key, using compound keys and other useful things.
+
+#### Paginating through results
+
+One of the first questions I usually get is wether it is possible to paginate through results
+in Cassandra. Short answer: yes, although not exactly the same way you may be used, if you've
+been using SQL data store for long enough.
+
+There're several ways to do that without creating additional index tables for storing ranges,
+but they're used in different circumstances.
+
+If you want to paginate through the complete table, which is sometimes called __iterate-world__
+in NoSQL terms, you want to use `tokens` for that. Because different nodes store your results,
+each key gets a token attached to it, therefore you can't say "ok, give me the all the keys
+that are __larger__ than the given one". What you have to do, though, is to get first `page`
+of results: `SELECT * FROM users LIMIT 10`, get the `key` of last result, use `token()` function
+to determine an internal storage key.
+
+Let's create a users table for that:
+
+```clj
+(create-table :users
+              (column-definitions {:name :varchar
+                                   :age  :int
+                                   :city :varchar
+                                   :primary-key [:name]}))
+```
+
+```sql
+CREATE TABLE users (age int, name varchar, city varchar, PRIMARY KEY (name));
+```
+
+And populate 100 entries to it:
+
+```clj
+(dotimes [i 100]
+  (insert :users {:name (str "name_" i) :city (str "city" i) :age (int i)}))
+```
+
+Now, let's get a first page:
+
+```clj
+(select :users (limit 10))
+```
+
+```sql
+SELECT * FROM users LIMIT 10;
+```
+
+This will return us first 10 users, although in rather random order. This happens
+because ordering is only possible when partition key is restricted by one of the equality
+operators.
+
+Now, you should get the `name` (which is a partition key value in that case) of the last
+user in the resulting collection. Let's say it was `name_53`. In order to get the next __page__,
+you should use `token` function:
+
+```clj
+(select :users
+  (where (token :name) [> (token "name_53")])
+  (limit 10))
+```
+
+```sql
+SELECT * FROM users WHERE token(name) > token('name_53') LIMIT 10;
+```
+
+This will return next chunk of entries for you.
+There's a convenience function built into Cassaforte, which is using lazy sequences underneath.
+If you want to iterate over `users` collection, using `name` as a partition key, and get `10`
+results per page, you can use:
+
+```clj
+(iterate-world :users :name 10)
+```
+
+Which will do all forementioned things for you.
+
+#### Range queries
+
+In case you use compound keys, you have more flexibility. Here, you can lock your partition key
+using `IN` or equality operator `=` and perform range queries on the results. It is possible, because
+Cassandra stores all entries with same partition key on same node, which guarantees good performance
+when retrieving records.
+
+For that example, let's model `tv_series` table, which will use a compound key. Partition key will be
+`series_title` (I like Futurama, yay!), second part of compound key will be `episode_id`. Rest of
+columns will store some information about series.
+
+```clj
+(create-table :tv_series
+              (column-definitions {:series_title  :varchar
+                                   :episode_id    :int
+                                   :episode_title :text
+                                   :primary-key [:series_title :episode_id]}))
+```
+
+```sql
+CREATE TABLE tv_series (episode_title text,
+                        series_title varchar,
+                        episode_id int,
+                        PRIMARY KEY (series_title, episode_id));
+```
+
+Now, let's insert some episode data into the table:
+
+```clj
+(dotimes [i 20]
+  (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+  (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+```
+
+If you lock partition key by using equality `WHERE series_title = 'Futurama'` or `IN` operator:
+`WHERE series_title IN ('Simpsons', 'Futurama')`, you can perform range queries on `episode_id`
+(which is a second part of compound key).
+
+```clj
+(select :tv_series
+        (where :series_title "Futurama"
+               :episode_id [> 10]))
+```
+
+```sql
+SELECT * FROM tv_series WHERE series_title = 'Futurama' AND episode_id > 10;
+```
+
+In the same manner, you can use `>=`, `>`, `<` and `<=` operators for performing range queries. In addition,
+you can query for a closed range (__from__ .. __to__):
+
+```clj
+(select :tv_series
+        (where :series_title "Futurama"
+               :episode_id [> 10]
+               :episode_id [<= 15]))
+```
+
+```sql
+SELECT * FROM tv_series WHERE series_title = 'Futurama' AND episode_id > 10 AND episode_id <= 15;
+```
+
+### Ordering results
+
+When partition key is locked, you can also run queries with `ORDER BY` clause, which will order
+results by any part of the key except for partition key:
+
+```clj
+(select :tv_series
+        (where :series_title "Futurama")
+        (order-by [:episode_id]))
+```
+
+```sql
+SELECT * FROM tv_series
+  WHERE series_title = 'Futurama'
+  ORDER BY episode_id;
+```
+
+### Filtering
+
+By default, Cassandra disallows potentially expensive queries, that involve data filtering on the
+server side. That is done to run queries with predictable performance, which is proportional to the
+amount of data returned from server.
+
+<div class="alert alert-error">
+It's required to say that, depending on a dataset size, allowing filtering may hurt performance.
+</div>
+
+For this example, let's use beforementioned `users` table, and add index on `age` and `city` to it:
+
+```sql
+CREATE TABLE users
+  (age int,
+   name varchar,
+   city varchar,
+   PRIMARY KEY (name));
+```
+
+```clj
+(create-index :users :age)
+(create-index :users :city)
+```
+
+```sql
+CREATE INDEX ON users (age);
+CREATE INDEX ON users (city);
+```
+
+Now, it is possible to query for all users of certain `age` living in a certain `city` using
+`ALLOW FILTERING` clause:
+
+```clj
+(select :users
+        (where :city "Munich"
+               :age [> (int 5)])
+        (allow-filtering true))
+```
+
+```sql
+SELECT * FROM users WHERE city = 'Munich' AND age > 5 ALLOW FILTERING;
+```
