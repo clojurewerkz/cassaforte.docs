@@ -85,7 +85,7 @@ various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`
   (:require [clojurewerkz.cassaforte.client :as client]))
 
 ;; Will connect to localhost
-(client/connect! "127.0.0.1")
+(client/connect! ["127.0.0.1"])
 ```
 
 In order to connect to multiple Cassandra cluster nodes, use:
@@ -212,7 +212,7 @@ ALTER KEYSPACE "cassaforte_keyspace"
                        'class' : 'NetworkTopologyStrategy'};
 ```
 
-Before you can use a keyspace, you have to switch to it with `clojurewerkz.cassaforte.xql/use-keyspace`:
+Before you can use a keyspace, you have to switch to it with `clojurewerkz.cassaforte.cql/use-keyspace`:
 
 ```clj
 (use-keyspace "cassaforte_keyspace")
