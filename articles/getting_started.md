@@ -85,7 +85,7 @@ various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`
   (:require [clojurewerkz.cassaforte.client :as client]))
 
 ;; Will connect to localhost
-(client/connect! "127.0.0.1")
+(client/connect! ["127.0.0.1"])
 ```
 
 In order to connect to multiple Cassandra cluster nodes, use:
