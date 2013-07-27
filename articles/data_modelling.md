@@ -80,13 +80,13 @@ paginagion across the items.
 
 In essence, one thing you should never do is full table scans. Most of the things you query for should be constrainted by
 primary key. One of the examples may be an event log for the users. For example, you want to log event ocurrences for particular
-user, when he logs in, logs out, or writes a message to anothey user. In that case, you may want to have user's `name` as
+user, when he logs in, logs out, or writes a message to another user. In that case, you may want to have user's `name` as
 a partition key, and let's say `created_at` as a second part of the key.
 
 ## Using Compound Keys
 
 In current Cassandra terminology, term __Compound Key__ is used to describe entries that are identified
-by the set of keys. This terms is used to avoid ambiguity with Composite Columns that were used in previous
+by the set of keys. This terms is used to avoid ambiguity with __Composite Columns__ that were used in previous
 versions of Cassandra.
 
 Queries with locked partition key are not expensive, since you can guarantee that things that
@@ -126,7 +126,7 @@ SELECT * FROM user_events WHERE name='Alex' AND created_at > '2012-01-01 12:20' 
 __Dynamic Column Families__ is something that is more specific to Cassandra.
 It is related to the Wide Rows concept. Let's say we need to store information
 about how the movie was rated. For that, we create a `movies` table with a
-_composite key_, that consists of `title` and `time`, when it was rated. We'll use
+_compound key_, that consists of `title` and `time`, when it was rated. We'll use
 `rating` column to store rating for the given time.
 
 ```sql
@@ -140,7 +140,7 @@ Now let's take a closer look on how the information is stored:
 |--------------+-------------------------|-------------------------|-------------------------|
 |              | 1368284297711:"rating"  | 1368284468993:"rating"  | 1368284474188:"rating"  |
 | Pulp Fiction +-------------------------|-------------------------|-------------------------|
-|              |           9             |           10            |           6            |
+|              |           9             |           10            |            6            |
 |--------------+-------------------------|-------------------------|-------------------------|
 |              | 1368284605867:"rating"  | 1368284612339:"rating"  | 1368284617643:"rating"  |
 |   Futurama   +-------------------------|-------------------------|-------------------------|

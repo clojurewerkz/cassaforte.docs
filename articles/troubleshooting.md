@@ -6,7 +6,7 @@ layout: article
 ## About this guide
 
 It's clear that things are not always going smooth, and it's very useful to understand what's actually
-going on, and whose fault it may be. Wether you've built a query that Cassandra can't execute, or
+going on, and whose fault it may be. Whether you've built a query that Cassandra can't execute, or
 driver generates an incorrect query. We provide several ways to debug these things, and can share
 our own experience on how to debug Cassandra issues.
 
@@ -143,7 +143,7 @@ with keys `Robert` and `Alex`, each one of them has `age` and `city` columns.
 It doesn't help if you wanted to see actual values, of course, but here you can
 see timestamps and understand wether certain columns were updated in an unexpected way.
 
-nIf you do similar check for `user_posts` table, results will be very different.
+If you do similar check for `user_posts` table, results will be very different.
 
 ```
 list user_posts;

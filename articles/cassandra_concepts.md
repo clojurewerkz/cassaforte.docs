@@ -122,7 +122,7 @@ that write will have to go to the node second node (counting from 0).
 
 Now, whenever a new machine is added to the cluster, the cluster will have
 to get rebalanced. Now, first node will take care of range from 0 to 2,
-second one - from 3 to 5 and so on. Data will move to the node where it belongs,
+second one - from 3 to 5 and so on. Data will be moved the node where it belongs,
 accoding to the hash function and new number of nodes. This also means
 that there will be no manual labour involved.
 
@@ -160,7 +160,6 @@ It provides a way to tune CAP properties however the developer sees fit.
 
 ## What to Read Next
 
-  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Data Modelling](/articles/modelling_data.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
