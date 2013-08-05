@@ -380,17 +380,17 @@ Now, let's insert some episode data into the table:
 ```
 
 If you lock partition key by using equality `WHERE series_title = 'Futurama'` or `IN` operator:
-`WHERE series_title IN ('Simpsons', 'Futurama')`, you can perform range queries on `episode_id`
+`WHERE series_title IN ('Futurama', 'Simpsons')`, you can perform range queries on `episode_id`
 (which is a second part of compound key).
 
 ```clj
 (select :tv_series
-        (where :series_title "Futurama"
+        (where :series_title [:in ["Futurama" "Simpsons"]]
                :episode_id [> 10]))
 ```
 
 ```sql
-SELECT * FROM tv_series WHERE series_title = 'Futurama' AND episode_id > 10;
+SELECT * FROM tv_series WHERE series_title IN ('Futurama', 'Simpsons') AND episode_id > 10;
 ```
 
 In the same manner, you can use `>=`, `>`, `<` and `<=` operators for performing range queries. In addition,
