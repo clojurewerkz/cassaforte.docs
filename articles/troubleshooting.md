@@ -12,12 +12,13 @@ our own experience on how to debug Cassandra issues.
 
 ## Trouble with driver
 
-In order to udnerstand why your queries don't get through, you want to use `clojurewerkz.cassaforte.cql/with-debug`
+In order to understand why your queries don't get through, you want to use `clojurewerkz.cassaforte.client/with-debug`
 macro. For example, let's try to create same exact keyspace twice from Clojure repl:
 
 ```clojure
 (use 'clojurewerkz.cassaforte.cql
-     'clojurewerkz.cassaforte.query)
+     'clojurewerkz.cassaforte.query
+     'clojurewerkz.cassaforte.client)
 
 (connect! ["127.0.0.1"])
 
