@@ -23,7 +23,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 __With Leiningen__
 
 ```clj
-[clojurewerkz/cassaforte "1.1.0"]
+[clojurewerkz/cassaforte "1.2.0"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from 1.4, to satisfy other
@@ -46,7 +46,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -58,7 +58,7 @@ __Supported Clojure Versions__
 Cassaforte is built from the ground up for Clojure 1.4 and later.
 
 
-__Supported Cassaforte Versions__
+__Supported Cassandra Versions__
 
 Cassaforte requires Cassandra 1.2+.
 
