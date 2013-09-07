@@ -23,7 +23,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 __With Leiningen__
 
 ```clj
-[clojurewerkz/cassaforte "1.1.0"]
+[clojurewerkz/cassaforte "1.2.0"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from 1.4, to satisfy other
@@ -46,7 +46,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.1.0</version>
+  <version>1.2.0</version>
 </dependency>
 ```
 
@@ -62,10 +62,46 @@ __Supported Cassaforte Versions__
 
 Cassaforte requires Cassandra 1.2+.
 
+## Installing Cassandra
 
+In order to install cassandra on Mac Os X (with [homebrew]()), run:
 
+```sh
+brew install cassandra
+```
 
-## Enable CQL Support On the Server
+And follow homebrew instructions for starting it.
+
+On Ubuntu, first make sure you're running latest version of 6 or 7 Java:
+
+```sh
+java -version
+```
+
+Add the following line to your `/etc/apt/sources.list`:
+
+```
+deb http://debian.datastax.com/community stable main
+```
+
+Add Datastax repository key to your trusted keys:
+
+```sh
+curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
+```
+
+And install package:
+
+```sh
+sudo apt-get update
+sudo apt-get install dsc12
+```
+
+This will start the service automatically.
+
+If you want to have a cluster running in VMs, just use [Cassaforte Docs Cluster](https://github.com/ifesdjeen/cassaforte_docs_cluster) setup, that uses Vagrant.
+
+### Enable CQL Support On the Server
 
 In order to use CQL and Cassaforte, you need to enable CQL support. Make sure `start_native_transport` is set to `true` in `cassandra.yaml`:
 
