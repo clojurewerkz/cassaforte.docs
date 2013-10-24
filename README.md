@@ -1,6 +1,6 @@
 # Cassaforte Documentation
 
-This is a documentation site for [Cassaforte](https://github.com/clojurewerkz/cassaforte).
+This is a documentation site for [Cassaforte](http://clojurecassandra.info).
 
 
 ## Install Dependencies
