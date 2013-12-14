@@ -60,7 +60,8 @@ Cassaforte is built from the ground up for Clojure 1.4 and later.
 
 __Supported Cassandra Versions__
 
-Cassaforte requires Cassandra 1.2+.
+Cassaforte is built from the ground up for CQL 3. Cassaforte 1.3 and
+later versions target Cassandra 2.x.
 
 
 
