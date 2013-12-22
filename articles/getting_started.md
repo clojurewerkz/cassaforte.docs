@@ -20,7 +20,7 @@ it is applicable.
 
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte).
 
-__With Leiningen__
+### With Leiningen
 
 ```clj
 [clojurewerkz/cassaforte "1.3.0-beta7"]
@@ -29,7 +29,7 @@ __With Leiningen__
 Please note that Cassaforte works with Clojure versions starting from 1.4, to satisfy other
 dependency requirements.
 
-__With Maven__
+### With Maven
 
 Add Clojars repository definition to your `pom.xml`:
 
@@ -53,20 +53,18 @@ And then the dependency:
 It is recommended to stay up-to-date with new versions. New releases
 and important changes are announced [@ClojureWerkz](http://twitter.com/clojurewerkz).
 
-__Supported Clojure Versions__
+## Supported Clojure Versions
 
 Cassaforte is built from the ground up for Clojure 1.4 and later.
 
 
-__Supported Cassandra Versions__
+## Supported Cassandra Versions
 
 Cassaforte is built from the ground up for CQL 3. Cassaforte 1.3 and
 later versions target Cassandra 2.x.
 
 
-
-
-## Enable CQL Support On the Server
+## Enable CQL Support In Cassandra
 
 In order to use CQL and Cassaforte, you need to enable CQL support. Make sure `start_native_transport` is set to `true` in `cassandra.yaml`:
 
