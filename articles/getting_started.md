@@ -20,16 +20,16 @@ it is applicable.
 
 Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/cassaforte).
 
-__With Leiningen__
+### With Leiningen
 
 ```clj
-[clojurewerkz/cassaforte "1.2.0"]
+[clojurewerkz/cassaforte "1.3.0-beta7"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from 1.4, to satisfy other
 dependency requirements.
 
-__With Maven__
+### With Maven
 
 Add Clojars repository definition to your `pom.xml`:
 
@@ -46,19 +46,19 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>1.2.0</version>
+  <version>1.3.0-beta7</version>
 </dependency>
 ```
 
 It is recommended to stay up-to-date with new versions. New releases
 and important changes are announced [@ClojureWerkz](http://twitter.com/clojurewerkz).
 
-__Supported Clojure Versions__
+### Supported Clojure Versions
 
 Cassaforte is built from the ground up for Clojure 1.4 and later.
 
 
-__Supported Cassaforte Versions__
+### Supported Cassaforte Versions
 
 Cassaforte requires Cassandra 1.2+.
 
