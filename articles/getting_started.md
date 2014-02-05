@@ -111,7 +111,7 @@ start_native_transport: true
 
 ## Connecting To Cassandra
 
-If you're connecting to the single cluster/keyspace, you should use `clojurewerkz.cassaforte.cql/connect!` function to connect to Cassandra.
+If you're connecting to the single cluster/keyspace, you should use `clojurewerkz.cassaforte.client/connect!` function to connect to Cassandra.
 It will set `*default-cluster*` and `*default-session*` for client and use them for all the operations later on. Use `clojurewerkz.cassaforte.cql`
 namespace for queries, all operations in this namespace will use a default session (or session you provide in a binding). You can also find
 various CQL helper functions are can be found in `clojurewerkz.cassaforte.query`.
