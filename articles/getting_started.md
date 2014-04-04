@@ -64,7 +64,7 @@ Cassaforte requires Cassandra 1.2+.
 
 ## Installing Cassandra
 
-In order to install cassandra on Mac Os X (with [homebrew]()), run:
+In order to install Cassandra on Mac OS X (with [homebrew](http://brew.sh/)), run:
 
 ```sh
 brew install cassandra
@@ -94,7 +94,7 @@ And install package:
 
 ```sh
 sudo apt-get update
-sudo apt-get install dsc12
+sudo apt-get install dsc20
 ```
 
 This will start the service automatically.
