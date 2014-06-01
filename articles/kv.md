@@ -18,20 +18,28 @@ This guide explains more complex Key/Value operations, such as
   * Filtering
   * Ordering
 
-This guide relies on things that are also mentioned in [Advanced Client Options](/articles/advanced_client_options.html) guide.
+This guide relies on certain features that are covered in [Advanced Client Options](/articles/advanced_client_options.html) guide.
 
-Every example will start with Clojure code followed by corresponding CQL statement.
+## What version of Cassaforte does this guide cover?
 
-## Inserting values
+This guide covers Cassaforte 2.0 (including preview releases).
 
-Let's create users table where we'll insert the values:
+## Inserting Rows
+
+Consider the following table:
 
 ```clj
-(create-table :users
-              (column-definitions {:name :varchar
-                                   :age  :int
-                                   :city :varchar
-                                   :primary-key [:name]}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn :users
+                (column-definitions {:name :varchar
+                                     :age  :int
+                                     :city :varchar
+                                     :primary-key [:name]})))
 ```
 
 ```sql
@@ -42,38 +50,214 @@ CREATE TABLE users
    PRIMARY KEY (name));
 ```
 
-Now, let's insert some values into this table:
+To insert a row in a table, use `clojurewerkz.cassaforte.cql/insert`:
 
 ```clj
-(insert :users {:name "Alex" :city "Munich" :age (int 19)})
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/insert conn "users" {:name "Alex" :age (int 19)}))
 ```
+
+The example above will use the following CQL:
 
 ```sql
-INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);
+INSERT INTO "users" (name, age) VALUES ('Alex', 19);
 ```
 
-That one's easy, right? When you query database, you'll see that the inserted value:
+## Fetching Rows
+
+The real power of CQL comes in querying. You can use standard equality queries,
+`IN` queries, and range queries.
+
+The examples above need some data to be in the "users" table:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/insert conn table {:name "Alex" :city "Munich" :age (int 19)})
+  (cql/insert conn table {:name "Robert" :city "Berlin" :age (int 25)})
+  (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
+```
+
+The above example will execute the CQL you expect:
+
+```sql
+INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
+INSERT INTO "users" (name, city, age) VALUES ('Robert', 'Berlin', 25);
+INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
+```
+
+Most straightforward thing is to select all users:
 
 ```clj
-(select :users)
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table))
+;; => [{:name "Robert", :age 25, :city "Berlin"}
+;;     {:name "Alex", :age 19, :city "Munich"}
+;;     {:name "Sam", :age 21, :city "San Francisco"}]
 ```
+
+In CQL, the query above will look like this:
 
 ```sql
-SELECT * FROM users;
+SELECT * FROM "users";
 ```
 
+Next, query a user by name:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table (where :name "Alex")))
+;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
-|  name |  age |   city |
-|-------+------+--------|
-|  Alex |   19 | Munich |
+
+The CQL executed this time will be
+
+```sql
+SELECT * FROM "users" WHERE name = 'Alex';
 ```
 
-### Tuning consistency
+Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
 
-With Cassaforte, it is possible to tune Consistency on a per-query basis.
-In order to do that, wrap your database call into `clojurewerkz.cassaforte.client/with-consistency-level`.
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
-Available Consistency options are:
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table (where :name [:in ["Alex" "Robert"]])))
+;; => [{:name "Alex", :age 19, :city "Munich"}
+;;     {:name "Robert", :age 25, :city "Berlin"}]
+```
+
+The `IN` query is named after the CQL operator it uses:
+
+```sql
+SELECT * FROM "users" WHERE name IN ('Alex', 'Robert');
+```
+
+Sorting and range queries in Cassandra have limitations compared to
+relational databases. Sorting is only possible when partition key is restricted by either
+exact match or `IN`. For example, having these `user_posts`:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
+```
+
+You can't sort all the posts by post_id. But if you say that you want
+to get all the posts from user Alex and sort them by `post_id`, it's
+possible:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  ;; For brevity, we select :post_id column only
+  (cql/select conn table
+          (columns :post_id)
+          (where :username "Alex")
+          (order-by [:post_id :desc])))
+
+;; => [{:post_id "post3"}
+;;     {:post_id "post2"}
+;;     {:post_id "post1"}]
+```
+
+CQL used by the code above is quite straightforward:
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+  ORDER BY post_id desc;
+```
+
+Finally, you can use range queries to get a slice of data:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  ;; For brevity, we select :post_id column only
+  (cql/select conn table
+          (columns :post_id)
+          (where :username "Alex"
+                 :post_id [> "post1"]
+                 :post_id [< "post3"])))
+;; => [{:post_id "post2"}]
+```
+
+will use
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+    AND post_id > 'post1'
+    AND post_id < 'post3';
+```
+
+In order to limit results of your query, use `limit` clause:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  (cql/select conn table (limit 1)))
+;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
+```
+
+`limit` does what one would expect:
+
+```sql
+SELECT * FROM "user_posts" LIMIT 1;
+```
+
+### Tuning Consistency
+
+With Cassandra, it is possible to tune consistency on a per-query basis.
+To do that, wrap your database call into `clojurewerkz.cassaforte.policies/with-consistency-level`:
+
+Available consistency levels are:
 
   * `:any`: write must be written to at least one node. `:any` will succeed even if all replica nodes
     are down and __hinted handoff__ write was made. Although in that case write will not become readable
@@ -88,32 +272,38 @@ Available Consistency options are:
     in all datacenters.
   * `:all`: write must be written to commit log and memory table of all replica nodes for given key.
 
-It is clear that `:all` has strongest __Consistency__, but weakest __Availability__ guarantees, because
-all the nodes should be up during the write, whereas `:one` has strongest __Availability__ but weakest
-__Consistency__ guarantees, because if the node went down before replicating data to other nodes,
-it won't be possible to read it until the node is back up.
+It is clear that `:all` has strongest __Consistency__, but weakest
+__Availability__ guarantees, because all the nodes should be up during
+the write, whereas `:one` has strongest __Availability__ but weakest
+__Consistency__ guarantees, because if the node went down before
+replicating data to other nodes, it won't be possible to read it until
+the node is back up.
 
-Quorum is calculated as `(replication-factor / 2) + 1`, so for replication factor of 3, quorum would be
-2, which means that it will tolerate when 1 node is down. For replication factor of 6, quorum is 4,
-which tolerates 2 nodes are down.
+Quorum is calculated as `(replication-factor / 2) + 1` ("the
+majority"), so for replication factor of 3, quorum would be 2, which
+means that it will tolerate when 1 node is down. For replication
+factor of 6, quorum is 4, which tolerates 2 nodes are down.
 
-It is hard to say which values should be taken for your application. If the write is made with consistency
-level of `:one`, it doesn't mean that data won't be replicated to all the nodes in replica set, it only
-means that write is acknowledged without making sure it's replicated. You can reduce latency and increase
-Availability by using lower Consistency Level, but you should always keep in mind what you're trading off.
+The values used are application-specific.
 
 Following operation will be performed with consistenct level of `:one`:
 
 ```clj
-(client/with-consistency-level (client/consistency-level :one
-  (insert :users {:name "Alex" :city "Munich" :age (int 19)}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.policies :as cp]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cp/with-consistency-level :quorum
+    (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)})))
 ```
 
 ### Timestamp and TTL
 
-When performing writes, you can specify Timestamp for the written columns. Even if you do not specify
-Timestamp manually, it is set by Cassandra internally. You can check it by using `cassandra-cli`, which
-is coming together with Cassandra package. You can learn more about this tool in [Troubleshooting](/articles/troubleshooting.html) guide.
+Column values in Cassandra have timestamps associated with them. Even if you do not provide
+a timestamp, it is set by Cassandra internally. You can check it by using `cqlsh` or `cassandra-cli`, both of which ship with Cassandra:
 
 ```
 > cassandra-cli
@@ -124,60 +314,69 @@ RowKey: Alex
 => (column=city, value=4d756e696368, timestamp=1369947837808000)
 ```
 
-You can see `timestamp` set by Cassandra for the write we've made. In order to make a write with
-manually set timestamp, you should use `(using :timestamp)` clause in your query:
+You can see `timestamp` value set by Cassandra for every column in a
+row. In order to make a write with manually set timestamp, you should
+use `(using :timestamp)` clause in your query:
 
 ```clj
-(insert :users {:name "Alex" :city "Munich" :age (int 19)}
-        (using :timestamp (.getTime (java.util.Date.))))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)}
+          (using :timestamp (.getTime (java.util.Date.)))))
 ```
 
 ```sql
 INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19) USING TIMESTAMP 1369948317602;
 ```
 
-And you'll see the timestamp you've set in `cassandra-cli`:
+Note that when developing applications that rely on timestamp values,
+[clock synchronization](http://en.wikipedia.org/wiki/Network_Time_Protocol) across the machines that run Cassandra clienst and nodes is mandatory.
 
-```
-> cassandra-cli
-> list users;
-RowKey: Alex
-=> (column=, value=, timestamp=1369948761376)
-=> (column=age, value=00000013, timestamp=1369948761376)
-=> (column=city, value=4d756e696368, timestamp=1369948761376)
-```
+Cassandra itself uses timestamps for conflict resolution. Column value
+with has higher timestamp will win over the record with lower
+timestamp in case of conflict. You can use arbitrary numbers for
+timestamps, but microseconds since Unix Epoch (1970) are used as a
+convention.
 
-Clocks on all the clients (and Cassandra servers, too) should be in sync.
-
-Timestamps are used for conflict resolution. Column with has higher timestamp will win over the record
-with lower timestamp in case of conflict, and will be replicated. You can use arbitrary numbers for
-timestamps, but microseconds since Unix Epoch (1970) are used as a convention.
-
-You can also specify optional TTL (Time To Live) for the column. If you do so, column will expire after
-specified amount of time.
+You can also specify optional TTL (Time To Live) for column values. If
+you do so, column values will expire after specified amount of time.
 
 
 ```clj
-(insert :users {:name "Alex" :city "Munich" :age (int 19)}
-        (using :ttl 60))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)}
+    (using :ttl 60)))
 ```
 
 ```sql
 INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19) USING TTL 60;
 ```
 
-You can run select query after 60 seconds and make sure that your column is gone now.
+In this example, the inserted row (technically, all of its column values) will be deleted
+in 60 seconds.
 
-When using TTL, you should remember that if you update record with `(using :ttl)` clause, column
-livespan will be reset, and counted from the moment of insert. You can figure you exact time when
-column will be deleted by finding out it's timestamp and adding TTL to it.
+When using TTL, you should remember that if you update record with
+`(using :ttl)` clause, column livespan will be reset, and counted from
+the moment of insert. [Picking TTL values upfront](http://www.ebaytechblog.com/2012/08/14/cassandra-data-modeling-best-practices-part-2/) is a good data modelling practice.
+
 
 ### Prepared Statements
 
-Prepared statements have same meaning as in relational databases. Server pases query once, and
-assigns a unique identifier, which is cached by clients for future references. Each time query
-is executed, only values are passed between client and server. This reduces an overhead of
-parsing query each time and amount of data sent over the network.
+Prepared statements have same meaning as in relational
+databases. Server pases query once, and assigns a unique identifier,
+which is cached by clients for future references. Each time query is
+executed, only values are passed between client and server. This
+reduces an overhead of parsing query each time and amount of data sent
+over the network.
 
 For example, a simple query to insert values to the table would be:
 
@@ -213,147 +412,305 @@ prepared one:
 If you want to run __all__ queries generated by `cql` or `multi.cql` namespaces as prepared,
 you can use `force-prepared-queries` connection option.
 
-### Counters
 
-Cassandra has a powerful concept, __Distributed Counters__. Counter columns provide an efficient
-way to count or sum anything you need. It is achieved by using atomic increment/decrement operations
-on values.
+### Querying Cassandra
 
-Counter is a special column type, whose value is a 64-bit (signed) interger. On write, new value
-is added (or substracted) to previous counter value. It should be noted that usual consistency/availability
-tradeoffs apply to counter operations. Also, because of the nature of counters, it is required to
-perform a read before write in a background, therefore updates on counters are slightly slower than
-usual updates. Counter reads have same performace as regular column reads.
+The real power of CQL comes in querying. You can use standard equality queries,
+`IN` queries, and range queries.
 
-For example, you can create a new table (`user_counters`) with `counter` column, and `name` key
-for counting user-specific operations, such as amount of operations performed by the user:
+The examples above need some data to be in the "users" table:
 
-```clj
-(create-table :user_counters
-              (column-definitions {:name :varchar
-                                   :user_count  :counter
-                                   :primary-key [:name]}))
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/insert conn table {:name "Alex" :city "Munich" :age (int 19)})
+  (cql/insert conn table {:name "Robert" :city "Berlin" :age (int 25)})
+  (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
 ```
+
+The above example will execute the CQL you expect:
 
 ```sql
-CREATE TABLE user_counters
-  (name varchar,
-   user_count counter,
-   PRIMARY KEY (name));
+INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
+INSERT INTO "users" (name, city, age) VALUES ('Robert', 'Berlin', 25);
+INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 ```
 
-In order to modify (increment or decrement) counter, you can use the following syntax:
+Most straightforward thing is to select all users:
 
 ```clj
-(update :user_counters
-        {:user_count (increment-by 5)}
-        (where :name "user1"))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
 
-(update :user_counters
-        {:user_count (decrement-by 5)}
-        (where :name "user1"))
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table))
+;; => [{:name "Robert", :age 25, :city "Berlin"}
+;;     {:name "Alex", :age 19, :city "Munich"}
+;;     {:name "Sam", :age 21, :city "San Francisco"}]
 ```
 
-Which will execute following CQL queries, correspondingly:
+In CQL, the query above will look like this:
 
 ```sql
-UPDATE user_counters SET user_count = user_count + 5 WHERE name = 'asd';
-UPDATE user_counters SET user_count = user_count - 5 WHERE name = 'asd';
+SELECT * FROM "users";
 ```
 
-### Querying
+Next, query a user by name:
 
-You get good query possibilities in Cassandra, but you have to model your data to be able to
-build flexible queries against your dataset. It is important to pick your parition key wisely,
-since it's the core of all the queries. To learn more about data modelling practices, refer
-to [Data Modelling](/articles/data_modelling.html) guide. There you can learn more about picking
-a partition key, using compound keys and other useful things.
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table (where :name "Alex")))
+;; => [{:name "Alex", :age 19, :city "Munich"}]
+```
+
+The CQL executed this time will be
+
+```sql
+SELECT * FROM "users" WHERE name = 'Alex';
+```
+
+Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users"]
+  (cql/select conn table (where :name [:in ["Alex" "Robert"]])))
+;; => [{:name "Alex", :age 19, :city "Munich"}
+;;     {:name "Robert", :age 25, :city "Berlin"}]
+```
+
+The `IN` query is named after the CQL operator it uses:
+
+```sql
+SELECT * FROM "users" WHERE name IN ('Alex', 'Robert');
+```
+
+Sorting and range queries in Cassandra have limitations compared to
+relational databases. Sorting is only possible when partition key is restricted by either
+exact match or `IN`. For example, having these `user_posts`:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
+  (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
+```
+
+You can't sort all the posts by post_id. But if you say that you want
+to get all the posts from user Alex and sort them by `post_id`, it's
+possible:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  ;; For brevity, we select :post_id column only
+  (cql/select conn table
+          (columns :post_id)
+          (where :username "Alex")
+          (order-by [:post_id :desc])))
+
+;; => [{:post_id "post3"}
+;;     {:post_id "post2"}
+;;     {:post_id "post1"}]
+```
+
+CQL used by the code above is quite straightforward:
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+  ORDER BY post_id desc;
+```
+
+Finally, you can use range queries to get a slice of data:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  ;; For brevity, we select :post_id column only
+  (cql/select conn table
+          (columns :post_id)
+          (where :username "Alex"
+                 :post_id [> "post1"]
+                 :post_id [< "post3"])))
+;; => [{:post_id "post2"}]
+```
+
+will use
+
+```sql
+SELECT post_id FROM "user_posts"
+  WHERE username = 'Alex'
+    AND post_id > 'post1'
+    AND post_id < 'post3';
+```
+
+In order to limit results of your query, use `limit` clause:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])
+      table "users_posts"]
+  (cql/select conn table (limit 1)))
+;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
+```
+
+`limit` does what one would expect:
+
+```sql
+SELECT * FROM "user_posts" LIMIT 1;
+```
 
 #### Paginating through results
 
-One of the first questions I usually get is wether it is possible to paginate through results
-in Cassandra. Short answer: yes, although not exactly the same way you may be used, if you've
-been using SQL data store for long enough.
+Cassaforte has support for more convenient pagination queries.
 
-There're several ways to do that without creating additional index tables for storing ranges,
-but they're used in different circumstances.
+To paginate through the complete table (sometimes called __iterate-world__),
+use the `tokens` strategy for that. Token-based pagination is based on every row
+having a special "token" field that sorting can be performed on. Then fetch
+a batch of rows, take the last one and to load the next page, use the token.
 
-If you want to paginate through the complete table, which is sometimes called __iterate-world__
-in NoSQL terms, you want to use `tokens` for that. Because different nodes store your results,
-each key gets a token attached to it, therefore you can't say "ok, give me the all the keys
-that are __larger__ than the given one". What you have to do, though, is to get first `page`
-of results: `SELECT * FROM users LIMIT 10`, get the `key` of last result, use `token()` function
-to determine an internal storage key.
-
-Let's create a users table for that:
+To demonstrate, consider the following table:
 
 ```clj
-(create-table :users
-              (column-definitions {:name :varchar
-                                   :age  :int
-                                   :city :varchar
-                                   :primary-key [:name]}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (create-table conn :users
+                (column-definitions {:name :varchar
+                                     :age  :int
+                                     :city :varchar
+                                     :primary-key [:name]})))
 ```
 
 ```sql
 CREATE TABLE users (age int, name varchar, city varchar, PRIMARY KEY (name));
 ```
 
-And populate 100 entries to it:
+Add 100 entries to it:
 
 ```clj
-(dotimes [i 100]
-  (insert :users {:name (str "name_" i) :city (str "city" i) :age (int i)}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn  (cc/connect ["127.0.0.1"])]
+  (dotimes [i 100]
+    (cql/insert conn :users {:name (str "name_" i) :city (str "city" i) :age (int i)})))
 ```
 
-Now, let's get a first page:
+Get the first page:
 
 ```clj
-(select :users (limit 10))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/select conn :users (limit 10)))
 ```
 
 ```sql
 SELECT * FROM users LIMIT 10;
 ```
 
-This will return us first 10 users, although in rather random order. This happens
-because ordering is only possible when partition key is restricted by one of the equality
-operators.
+This will return us first 10 rows but in random order. This happens
+because ordering is only possible when partition key is restricted by
+one of the equality operators.
 
-Now, you should get the `name` (which is a partition key value in that case) of the last
-user in the resulting collection. Let's say it was `name_53`. In order to get the next __page__,
-you should use `token` function:
+To load the next page ordered, get the `name` (which is a partition
+key value in that case) of the last user in the resulting
+collection. Say the value was `name_53`. In order to get the next
+__page__, you should use `token` function:
 
 ```clj
-(select :users
-  (where (token :name) [> (token "name_53")])
-  (limit 10))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (select conn :users
+    (where (token :name) [> (token "name_53")])
+    (limit 10)))
 ```
 
 ```sql
 SELECT * FROM users WHERE token(name) > token('name_53') LIMIT 10;
 ```
 
-This will return next chunk of entries for you.
-There's a convenience function built into Cassaforte, which is using lazy sequences underneath.
-If you want to iterate over `users` collection, using `name` as a partition key, and get `10`
-results per page, you can use:
+This will return next page in the desired order.
+
+Cassaforte provides a convenience function, which uses lazy sequences to
+implement the algorithm described above.
+
+In the example below, we iterate over `users` collection, using `name`
+as a partition key, and get `10` results per page:
 
 ```clj
-(iterate-world :users :name 10)
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/iterate-table conn :users :name 10))
 ```
 
-Which will do all forementioned things for you.
 
 #### Range queries
 
-In case you use compound keys, you have more flexibility. Here, you can lock your partition key
-using `IN` or equality operator `=` and perform range queries on the results. It is possible, because
-Cassandra stores all entries with same partition key on same node, which guarantees good performance
-when retrieving records.
+In case you use compound keys, you have more flexibility. Here, you
+can lock your partition key using `IN` or equality operator `=` and
+perform range queries on the results. It is possible, because
+Cassandra stores all entries with same partition key on same node,
+which guarantees good performance when retrieving records.
 
-For that example, let's model `tv_series` table, which will use a compound key. Partition key will be
-`series_title` (I like Futurama, yay!), second part of compound key will be `episode_id`. Rest of
+For that example, let's model `tv_series` table, which will use a
+compound key. Partition key will be `series_title` (I like Futurama,
+yay!), second part of compound key will be `episode_id`. Rest of
 columns will store some information about series.
 
 ```clj
@@ -467,3 +824,86 @@ Now, it is possible to query for all users of certain `age` living in a certain 
 ```sql
 SELECT * FROM users WHERE city = 'Munich' AND age > 5 ALLOW FILTERING;
 ```
+
+
+### Counters
+
+Cassandra has a powerful concept, __Distributed Counters__. Counter
+columns provide an efficient way to count or sum integer values. It is
+achieved by using atomic increment/decrement operations on values.
+
+Counter is a special column type, whose value is a 64-bit (signed)
+interger. On write, new value is added (or substracted) to previous
+counter value. It should be noted that usual consistency/availability
+tradeoffs apply to counter operations. In order to perform a counter
+update, Cassandra has to perform a read before write in a background,
+therefore updates on counters are slightly slower than regular
+updates.
+
+Consider a table (`user_counters`) with `counter` column, and `name` key
+for counting user-specific operations, such as amount of operations
+performed by the user:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn :user_counters
+                (column-definitions {:name :varchar
+                                     :user_count  :counter
+                                     :primary-key [:name]})))
+```
+
+```sql
+CREATE TABLE user_counters
+  (name varchar,
+   user_count counter,
+   PRIMARY KEY (name));
+```
+
+In order to modify (increment or decrement) counter, you can use the
+following DSL syntax:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :user_counters
+          {:user_count (increment-by 5)}
+          (where :name "user1"))
+  
+  (cql/update conn :user_counters
+          {:user_count (decrement-by 5)}
+          (where :name "user1")))
+```
+
+Which will execute following CQL queries, correspondingly:
+
+```sql
+UPDATE user_counters SET user_count = user_count + 5 WHERE name = 'asd';
+UPDATE user_counters SET user_count = user_count - 5 WHERE name = 'asd';
+```
+
+## Wrapping Up
+
+Cassaforte provides a nice way to use CQL with Cassandra. You can
+manipulate insert rows, perform queries, update data, delete data, use
+distributed counters.
+
+The rest of this documentation covers more features Cassaforte and
+Cassandra provide.
+
+
+## What to read next
+
+  * [Data Modelling](/articles/data_modelling.html)
+  * [Schema Operations](/articles/schema_operations.html)
+  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Advanced Client Options](/articles/advanced_client_options.html)
+  * [Troubleshooting](/articles/troubleshooting.html)
