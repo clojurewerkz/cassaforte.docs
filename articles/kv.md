@@ -797,9 +797,15 @@ queries with `ORDER BY` clause, which will order results by any part
 of the key except for the partition key:
 
 ```clj
-(select :tv_series
-        (where :series_title "Futurama")
-        (order-by [:episode_id]))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/select conn :tv_series
+          (where :series_title "Futurama")
+          (order-by [:episode_id])))
 ```
 
 ```sql
@@ -810,15 +816,17 @@ SELECT * FROM tv_series
 
 ### Filtering
 
-By default, Cassandra disallows potentially expensive queries, that involve data filtering on the
-server side. That is done to run queries with predictable performance, which is proportional to the
-amount of data returned from server.
+By default, Cassandra disallows potentially expensive queries, that
+involve data filtering on the server side. That is done to run queries
+with predictable performance, which is proportional to the amount of
+data returned from the server.
 
 <div class="alert alert-error">
 It's required to say that, depending on a dataset size, allowing filtering may hurt performance.
 </div>
 
-For this example, let's use beforementioned `users` table, and add index on `age` and `city` to it:
+For this example, let's use the `users` table described aboe, and add
+index on `age` and `city` to it:
 
 ```sql
 CREATE TABLE users
@@ -829,8 +837,14 @@ CREATE TABLE users
 ```
 
 ```clj
-(create-index :users :age)
-(create-index :users :city)
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-index conn :users :age)
+  (cql/create-index conn :users :city))
 ```
 
 ```sql
@@ -842,10 +856,16 @@ Now, it is possible to query for all users of certain `age` living in a certain 
 `ALLOW FILTERING` clause:
 
 ```clj
-(select :users
-        (where :city "Munich"
-               :age [> (int 5)])
-        (allow-filtering true))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/select conn :users
+          (where :city "Munich"
+                 :age [> (int 5)])
+          (allow-filtering true)))
 ```
 
 ```sql
