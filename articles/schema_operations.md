@@ -191,3 +191,20 @@ which will use the following CQL:
 ```sql
 ALTER TABLE "users" RENAME username TO name;
 ```
+
+## Wrapping Up
+
+Cassaforte provides a nice way to manipulate
+keyspaces and table to define the schema your system needs.
+
+The rest of this documentation covers more features Cassaforte and
+Cassandra provide.
+
+
+## What to read next
+
+  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+  * [Key Value Operations](/articles/kv.html)
+  * [Data Modelling](/articles/data_modelling.html)
+  * [Advanced Client Options](/articles/advanced_client_options.html)
+  * [Troubleshooting](/articles/troubleshooting.html)
