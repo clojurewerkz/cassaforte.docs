@@ -598,5 +598,6 @@ Cassandra provide.
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Key Value Operations](/articles/kv.html)
   * [Data Modelling](/articles/data_modelling.html)
+  * [Schema Operations](/articles/schema_operations.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
