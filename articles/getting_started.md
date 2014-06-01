@@ -397,7 +397,7 @@ You can learn more about prepared statements in the
 [Key Value Operations](http://clojurecassandra.info/articles/kv.html) guide.
 
 
-## Fetching Rows
+## Querying Cassandra
 
 The real power of CQL comes in querying. You can use standard equality queries,
 `IN` queries, and range queries.
@@ -595,9 +595,9 @@ Cassandra provide.
 
 ## What to read next
 
-  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Key Value Operations](/articles/kv.html)
   * [Data Modelling](/articles/data_modelling.html)
   * [Schema Operations](/articles/schema_operations.html)
+  * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
