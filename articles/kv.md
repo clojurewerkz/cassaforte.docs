@@ -700,25 +700,31 @@ as a partition key, and get `10` results per page:
 ```
 
 
-#### Range queries
+#### Range Queries
 
-In case you use compound keys, you have more flexibility. Here, you
-can lock your partition key using `IN` or equality operator `=` and
-perform range queries on the results. It is possible, because
-Cassandra stores all entries with same partition key on same node,
-which guarantees good performance when retrieving records.
+In case you use compound keys, you have can perform range queries
+efficiently. Here, you can "lock" your partition key using `IN` or
+equality operator `=` and perform range queries on the results. It is
+possible, because Cassandra stores all entries with same partition key
+on same node, which guarantees good performance when retrieving
+records.
 
-For that example, let's model `tv_series` table, which will use a
-compound key. Partition key will be `series_title` (I like Futurama,
-yay!), second part of compound key will be `episode_id`. Rest of
-columns will store some information about series.
+Consider a `tv_series` table, which will use a
+compound key. Partition key will be `series_title`, `episode_id` will also be
+part of the key:
 
 ```clj
-(create-table :tv_series
-              (column-definitions {:series_title  :varchar
-                                   :episode_id    :int
-                                   :episode_title :text
-                                   :primary-key [:series_title :episode_id]}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn :tv_series
+                (column-definitions {:series_title  :varchar
+                                     :episode_id    :int
+                                     :episode_title :text
+                                     :primary-key [:series_title :episode_id]})))
 ```
 
 ```sql
@@ -728,46 +734,67 @@ CREATE TABLE tv_series (episode_title text,
                         PRIMARY KEY (series_title, episode_id));
 ```
 
-Now, let's insert some episode data into the table:
+Populate the table:
 
 ```clj
-(dotimes [i 20]
-  (insert :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
-  (insert :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)}))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (dotimes [i 20]
+    (cql/insert conn :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (cql/insert conn :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)})))
 ```
 
-If you lock partition key by using equality `WHERE series_title = 'Futurama'` or `IN` operator:
-`WHERE series_title IN ('Futurama', 'Simpsons')`, you can perform range queries on `episode_id`
-(which is a second part of compound key).
+If you lock partition key by using equality `WHERE series_title =
+'Futurama'` or `IN` operator: `WHERE series_title IN ('Futurama',
+'Simpsons')`, you can perform range queries on `episode_id` (which is
+a second part of compound key):
 
 ```clj
-(select :tv_series
-        (where :series_title [:in ["Futurama" "Simpsons"]]
-               :episode_id [> 10]))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/select conn :tv_series
+          (where :series_title [:in ["Futurama" "Simpsons"]]
+                 :episode_id [> 10])))
 ```
 
 ```sql
 SELECT * FROM tv_series WHERE series_title IN ('Futurama', 'Simpsons') AND episode_id > 10;
 ```
 
-In the same manner, you can use `>=`, `>`, `<` and `<=` operators for performing range queries. In addition,
-you can query for a closed range (__from__ .. __to__):
+In the same manner, you can use `>=`, `>`, `<` and `<=` operators for
+performing range queries. In addition, you can query for a closed
+range (__from__ .. __to__):
 
 ```clj
-(select :tv_series
-        (where :series_title "Futurama"
-               :episode_id [> 10]
-               :episode_id [<= 15]))
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/select conn :tv_series
+          (where :series_title "Futurama"
+                 :episode_id [> 10]
+                 :episode_id [<= 15])))
 ```
 
 ```sql
 SELECT * FROM tv_series WHERE series_title = 'Futurama' AND episode_id > 10 AND episode_id <= 15;
 ```
 
-### Ordering results
+### Sorting Results
 
-When partition key is locked, you can also run queries with `ORDER BY` clause, which will order
-results by any part of the key except for partition key:
+When partition key is used in query condition, you can also run
+queries with `ORDER BY` clause, which will order results by any part
+of the key except for the partition key:
 
 ```clj
 (select :tv_series
