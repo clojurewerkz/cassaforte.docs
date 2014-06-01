@@ -18,8 +18,7 @@ easier and to contrast the approaches it takes compared to relational databases.
 ## A Bit of History: Cassandra and Dynamo
 
 Cassandra is often referred as one of implementations of ideas in the
-[Dynamo
-Paper](http://www.allthingsdistributed.com/2007/10/amazons_dynamo.html).
+[Dynamo Paper](http://www.allthingsdistributed.com/2007/10/amazons_dynamo.html).
 Some things, that are more applicable to Cassandra, will be covered in
 this guide. In order to understand the underlying concepts, reading
 the paper itself would be very valuable. Note that Cassandra in some
@@ -33,19 +32,24 @@ Cassandra allows you to increase system availability by embracing so called
 Nevertheless, it is possible to get strong consistency, by trading off
 an increase in latency.
 
+See the [original Cassandra paper annotated for Cassandra 2.0](http://www.datastax.com/documentation/articles/cassandra/cassandrathenandnow.html)
+to learn more.
+
 
 
 ## Cassandra is Distributed and Replicated
 
-Cassandra is a distributed data store and designed to be highly available. For
-that, it replicates data within the cluster. The data is stored
-redundantly on multiple nodes. In case one node fails, data is still
-available for retrieval from a different node or multiple nodes.
+Cassandra is a distributed data store and designed to be highly
+available. For that, it replicates data within the cluster. Data in
+Cassandra is stored redundantly on multiple nodes. In case a node
+fails, its portion of the data is still available for retrieval from a
+different node or multiple nodes.
 
-Cassandra starts making most sense when your data is rather big. Because it
-was built for distribution, you can scale your reads and writes, and fine-tune and
-manage your database `consistency` and `availability`. Cassandra handles network partitions
-well, so even when your several nodes are unavailable for some time, you will still
+Cassandra starts making most sense when your data set is rather
+big. Because it was built for distribution, you can scale your reads
+and writes, and fine-tune and manage your database `consistency` and
+`availability`. Cassandra handles network partitions well, so even
+when your several nodes are unavailable for some time, you will still
 be able to easily recover from that.
 
 
@@ -55,25 +59,23 @@ Any distributed system, be it a database, computing backend, or web application
 is facing several problems:
 
   * __Load Balancing__: if you have more than one node in the system, the load should
-    be evenly distributed between the workers.
+    be evenly distributed between them.
 
-  * __Cluster Membership__ is solved by two parts: _Service Discovery_ and _Failure Detection_.
-    Service Discovery comes into play when you set up a fresh node, add it to the cluster.
-    Data gets replicated to that node and it starts receiving writes and serving reads.
-    When the node has left the cluster, was taken down for maintenance, or shut down due
-    to an error, and later recovered from the failure or was brought back after maintenance,
-    it should join the cluster again automatically, otherwise maintenance overhead will
-    be to large, and there will always be a rather large chunk of manual labour.
+  * __Cluster Membership__, which can be split into two parts: _Service Discovery_ and _Failure Detection_.
+    Service discovery comes into play when you set up a fresh node, add it to the cluster.
+    data gets replicated to that node and it starts receiving requests.
+    When the node is was taken down for maintenance, or fails due
+    to an error, this should be detected as quickly as possible by other members of the cluster.
 
   * __Inter-node communication__: nodes should be able to communicate with each other,
     share internal information, distribute the data or inform about system changes. Nodes
     are able to retrieve missing information, schedule jobs accordingly, transfer state
     and hand off information stored while peer was unavailable.
 
-Many properties of the distributed systems require client to be smarter. Cassaforte
-uses [DataStax java-driver](github.com/datastax/java-driver) underneath, which allows
-you to connect to the cluster, discover nodes in the cluster, set up retry and load
-balancing policies, among other features.
+Many properties of the distributed systems require client to be
+smarter. Cassaforte uses [DataStax Java driver](http://github.com/datastax/java-driver) underneath, which
+allows you to connect to the cluster, discover nodes in the cluster,
+set up retry and load balancing policies, among other features.
 
 
 ## Key Terms
@@ -82,23 +84,23 @@ If you're familiar with Cassandra, you may want to skip this section.
 Here we'll mention Cassandra-specific concepts, that may be not familiar
 for the newcomers.
 
-__Keyspace__ is what's usually called Database in relational databases, it
-holds Column Families, sets of key-value pairs. __Column family__ is somewhat
-close to the Table concept from relational DBs. There're no relationships
-enforced between Column Families in Cassandra, even though you may build
+__Keyspace__ is what's usually called database in relational databases, it
+holds column families, sets of key-value pairs. __Column family__ is somewhat
+close to the table concept from relational DBs. There're no relationships
+enforced between column families in Cassandra, even though you may build
 your own foreign keys, _there will be no checks performed_ during writes
 and deletes to ensure integrity. You'll have to implement these things
 yourself.
 
 Cassandra allows you to scale your database incrementally, by adding more
-nodes to the cluster. For that, it uses Consistent Hashing and Virtual Nodes.
+nodes to the cluster. For that, it uses consistent hashing and virtual nodes.
 
 In relational databases, scalability is often achieved by 2 factors:
 
-  * __Replication__. You add slaves, that get replicated data from master,
+  * __Replication__. You add more nodes, data gets replicated to them,
     which allows you to scale reads.
 
-  * __Sharding__. It allows you to distribute data, depending on the sharding key,
+  * __Sharding__ allows you to distribute writes, depending on the sharding key,
     to one of the machines.
 
 With replication, you still get difficulties when you have write-heavy
@@ -136,8 +138,7 @@ it may hold, and moving data becomes even easier.
 ## Data Model
 
 Unlike Dynamo, which is a pure key/value store, Cassandra's data model
-is heavily influenced by Google's [Big
-Table](http://static.googleusercontent.com/external_content/untrusted_dlcp/research.google.com/es//archive/bigtable-osdi06.pdf)
+is heavily influenced by Google's [Big Table](http://static.googleusercontent.com/external_content/untrusted_dlcp/research.google.com/es//archive/bigtable-osdi06.pdf)
 data model with column families.
 
 ### Column Families
