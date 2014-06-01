@@ -32,12 +32,6 @@ Key/value operations in-depth guide. Covers topics such as:
   * Filtering
   * Ordering
 
-### [Key Cassandra Concepts](/articles/cassandra_concepts.html)
-
- * Key concepts behind Cassandra
- * A glossary of terms related to Cassandra.
-
-
 ###  [Data Modelling](/articles/data_modelling.html)
 
 Introduction to how to model your data "the Cassandra Way" with a few examples, this guide
@@ -56,6 +50,11 @@ Introduction to how to define and manage Cassandra schema with Cassaforte:
   * Operations on keyspaces
   * Operations on tables
   * Other topics related to schema management
+
+### [Key Cassandra Concepts](/articles/cassandra_concepts.html)
+
+ * Key concepts behind Cassandra
+ * A glossary of terms related to Cassandra.
 
 ### [Advanced Client Options](/articles/advanced_client_options.html) guide
 
