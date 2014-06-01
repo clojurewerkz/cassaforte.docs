@@ -582,9 +582,6 @@ In order to limit results of your query, use `limit` clause:
 SELECT * FROM "user_posts" LIMIT 1;
 ```
 
-
-
-
 ## Wrapping Up
 
 Cassaforte provides a nice way to use CQL with Cassandra. You can manipulate
