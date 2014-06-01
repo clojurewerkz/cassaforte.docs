@@ -12,11 +12,12 @@ We recommend that you read these guides, if possible, in this order:
 
 ###  [Getting started](/articles/getting_started.html)
 
-An overview of Cassaforte with a quick tutorial that helps you to get started with it. It should take about
-15 minutes to read and study the provided code examples.
+An overview of Cassaforte with a quick tutorial that helps you to get
+started with it. It should take about 15 minutes to read and study the
+provided code examples.
 
 
-###  [Key/Value Operations](/articles/kv.html)
+### [Key/Value Operations](/articles/kv.html)
 
 Key/value operations in-depth guide. Covers topics such as:
 
@@ -48,18 +49,18 @@ covers topics such as:
   * Collection columns
   * Modelling best practices
 
+###  [Schema Operations](/articles/schema_operations.html)
+
+Introduction to how to define and manage Cassandra schema with Cassaforte:
+
+  * Operations on keyspaces
+  * Operations on tables
+  * Other topics related to schema management
+
 ### [Advanced Client Options](/articles/advanced_client_options.html) guide
 
-This guide covers:
+This guide covers advanced options Cassaforte client can use:
 
- * Reconnection
+ * Reconnection strategies
  * Operation retries
-
-
-### [Troubleshooting Guide](/articles/troubleshooting.html)
-
-This guide covers:
-
- * Troubleshooting problems with Cassaforte, getting sensible debug outputs
- * Using `cqlsh`
- * Using `cassandra-cli`
+ * Consistency levels
