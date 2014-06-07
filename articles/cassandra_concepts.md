@@ -69,22 +69,36 @@ master nodes in Cassandra.
 
 Any distributed system, in particular databases, face several problems:
 
-  * __Load Balancing__: if you have more than one node in the system, the load should
-    be evenly distributed between them.
+ * Cluster membership
+ * Inter-node communication
+ * Load balancing
 
-  * __Cluster Membership__, which can be split into two parts: _Service Discovery_ and _Failure Detection_.
-    Service discovery comes into play when you set up a fresh node, add it to the cluster.
-    data gets replicated to that node and it starts receiving requests.
-    When the node is was taken down for maintenance, or fails due
-    to an error, this should be detected as quickly as possible by other members of the cluster.
+### Inter-node Communication
 
-  * __Inter-node communication__: nodes should be able to communicate with each other,
-    share internal information, distribute the data or inform about system changes. Nodes
-    are able to retrieve missing information, schedule jobs accordingly, transfer state
-    and hand off information stored while peer was unavailable.
+nodes should be able to communicate with each other, share (cluster)
+state, distribute the data and propagate notifications about system
+changes. Nodes ideally should be able to retrieve missing information,
+schedule jobs accordingly, transfer state and hand off information
+stored while some other nodes are unavailable.
 
-Many properties of the distributed systems require client to be
-smarter. Cassaforte uses [DataStax Java driver](http://github.com/datastax/java-driver) underneath, which
+### Load Balancing
+
+When nodes are added toe the system, the load should be
+evenly distributed between them.
+
+### Cluster Membership
+
+This can be split into two parts: _Service Discovery_ and _Failure
+Detection_.  Service discovery comes into play when you set up a
+fresh node, add it to the cluster.  data gets replicated to that
+node and it starts receiving requests.  When the node is was taken
+down for maintenance, or fails due to an error, this should be
+detected as quickly as possible by other members of the cluster.
+
+
+Many properties of the distributed systems require client libraries to
+be smarter. Cassaforte uses [DataStax Java
+driver](http://github.com/datastax/java-driver) underneath, which
 allows you to connect to the cluster, discover nodes in the cluster,
 set up retry and load balancing policies, among other features.
 
@@ -92,19 +106,17 @@ set up retry and load balancing policies, among other features.
 ## Key Terms
 
 If you're familiar with Cassandra, you may want to skip this section.
-Here we'll mention Cassandra-specific concepts, that may be not familiar
-for the newcomers.
 
-__Keyspace__ is what's usually called database in relational databases, it
-holds column families, sets of key-value pairs. __Column family__ is somewhat
-close to the table concept from relational DBs. There're no relationships
-enforced between column families in Cassandra, even though you may build
-your own foreign keys, _there will be no checks performed_ during writes
-and deletes to ensure integrity. You'll have to implement these things
-yourself.
+__Keyspace__ is what's usually called database in relational
+databases, it holds column families, sets of key-value pairs. __Column
+family__ is somewhat close to the table concept from relational
+DBs. There're no relations between column families in Cassandra, even
+though it is possible to use foreign keys, _there will be no
+referencial integrity checks performed_.
 
 Cassandra allows you to scale your database incrementally, by adding more
-nodes to the cluster. For that, it uses consistent hashing and virtual nodes.
+nodes to the cluster. To decide how data is distributed in a cluster, it relies
+on two concepts: consistent hashing and virtual nodes.
 
 In relational databases, scalability is often achieved by 2 factors:
 
@@ -122,45 +134,53 @@ you.
 
 ## Consistent Hashing
 
-By using __Consistent Hashing__, you can solve this problem in a more elegant
-way. Having a (very) large set of values form a Ring, each node takes over
-some range of a ring (think: angle). Hash function is then used to
-determine which node the object belongs to.
+[Consistent Hashing](http://en.wikipedia.org/wiki/Consistent_hashing)
+is a kind of hashing that minimizes the number of elements that need
+to be re-mapped when a hash table is resized.  It uses a hash function
+underneath (e.g. MD5 or SHA-1) is then used to determine what cluster node
+the object belongs to.
 
-To simplify the concept, let's say you have a Ring of values from 0 to 11,
-and 3 nodes. First node will handle reads and writes for values from 0 to 3,
-second one - 4 to 7, third one - 8 to 11. Now, we have keys from 0 to 11, and
-new write comes with a key 5. By calculating 5 modulo 4, we get 1, which means
-that write will have to go to the node second node (counting from 0).
-
-Now, whenever a new machine is added to the cluster, the cluster will have
-to get rebalanced. Now, first node will take care of range from 0 to 2,
-second one - from 3 to 5 and so on. Data will be moved the node where it belongs,
-accoding to the hash function and new number of nodes. This also means
-that there will be no manual labour involved.
+For a straightforward explanation of consistent hashing,
+see [The Simple Magic of Consistent Hashing](http://www.paperplanes.de/2011/12/9/the-magic-of-consistent-hashing.html) by Mathias Meyer.
 
 ## Virtual Nodes
 
-Virtual Nodes allow you to go even further, by splitting the Ring into the larger
-amount of chunks. Each node gets configured, depending on how many Virtual Nodes
-it may hold, and moving data becomes even easier.
+Virtual nodes allow you to go even further, by splitting the ring
+(hashing range) into a greater amount of chunks. Each node gets
+configured, depending on how many virtual nodes it may hold, and
+moving data becomes even easier.
+
+Virtual nodes in Cassandra were [introduced in version 1.2](http://www.datastax.com/dev/blog/virtual-nodes-in-cassandra-1-2).
 
 
-## Data Model
+## Columnar Data Model
 
 Unlike Dynamo, which is a pure key/value store, Cassandra's data model
 is heavily influenced by Google's [Big Table](http://static.googleusercontent.com/external_content/untrusted_dlcp/research.google.com/es//archive/bigtable-osdi06.pdf)
-data model with column families.
+data model. Data is stored in column families.
 
 ### Column Families
 
-A column family is a container for rows, that is somewhat similar to a table
-in a relational database. Each column family has a name, which it is referenced
-by. In this guide, terms column family and table will be used interchangeably.
+A column family is a container for rows, that is somewhat similar to a
+table in a relational database. Each column family has a name, which
+it is referenced by.
 
-Cassandra has `static` and `dynamic` column families. Static column
-families are simple, you specify a fixed schema for the column family, add
-data according to the schema, and alter whenever the application requires it.
+Rows have a row key (primary key) and zero or more columns. Unlike
+relational databases, each row can have its own number of columns (up
+to 2 billion), even in the same column family.
+
+Column values (cells) have timestamps associated with them. This means
+they can expire. Expired cells are considered to be deleted. This is a very
+useful feature for time series modelling.
+
+
+## CQL 3 Mapping to Cassandra Data Model
+
+CQL 3 makes Cassandra seem much closer to a relational database. However, the data
+model used under the hood is still the columnar mode described above. With CQL 3.0,
+Cassandra provides a more familiar interface that builds on the same internal machinery.
+
+To lean how it works and what limitations CQL 3 has, see [The CQL 3/Cassandra Mapping](http://www.slideshare.net/DataStax/understanding-how-cql3-maps-to-cassandras-internal-data-structure).
 
 
 ## Wrapping Up
@@ -172,6 +192,5 @@ It provides a way to tune CAP properties however the developer sees fit.
 
 ## What to Read Next
 
-  * [Data Modelling](/articles/modelling_data.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
   * [Troubleshooting](/articles/troubleshooting.html)
