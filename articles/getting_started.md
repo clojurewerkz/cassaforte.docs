@@ -596,8 +596,6 @@ Cassandra provide.
 ## What to read next
 
   * [Key Value Operations](/articles/kv.html)
-  * [Data Modelling](/articles/data_modelling.html)
   * [Schema Operations](/articles/schema_operations.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
-  * [Troubleshooting](/articles/troubleshooting.html)
