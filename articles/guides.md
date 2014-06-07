@@ -32,17 +32,6 @@ Key/value operations in-depth guide. Covers topics such as:
   * Filtering
   * Ordering
 
-###  [Data Modelling](/articles/data_modelling.html)
-
-Introduction to how to model your data "the Cassandra Way" with a few examples, this guide
-covers topics such as:
-
-  * Static tables
-  * Dynamic tables
-  * Compound keys
-  * Collection columns
-  * Modelling best practices
-
 ###  [Schema Operations](/articles/schema_operations.html)
 
 Introduction to how to define and manage Cassandra schema with Cassaforte:
