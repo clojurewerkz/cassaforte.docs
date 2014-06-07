@@ -8,11 +8,18 @@ layout: article
 This guide covers key concepts behind [Apache Cassandra](http://cassandra.apache.org).
 
 
+## What version of Cassaforte does this guide cover?
+
+This guide covers Cassandra 2.0 concepts and is not specific to Cassaforte
+versions.
+
+
 ## Before We Start
 
-Some concepts, especially comparisons with relational databases are intentionally
-simplified in this guide. The goal is to make understanding what Cassandra has to offer
-easier and to contrast the approaches it takes compared to relational databases.
+Some concepts, especially comparisons with relational databases are
+intentionally simplified in this guide. The goal is to make
+understanding what Cassandra has to offer easier and to contrast the
+approaches it takes compared to relational databases.
 
 
 ## A Bit of History: Cassandra and Dynamo
@@ -37,26 +44,30 @@ to learn more.
 
 
 
-## Cassandra is Distributed and Replicated
+## Data in Cassandra is Distributed and Replicated
 
-Cassandra is a distributed data store and designed to be highly
-available. For that, it replicates data within the cluster. Data in
+Cassandra is a distributed data store which was designed to be highly
+available. For that reason, it replicates data within the cluster. Data in
 Cassandra is stored redundantly on multiple nodes. In case a node
 fails, its portion of the data is still available for retrieval from a
 different node or multiple nodes.
 
-Cassandra starts making most sense when your data set is rather
-big. Because it was built for distribution, you can scale your reads
-and writes, and fine-tune and manage your database `consistency` and
-`availability`. Cassandra handles network partitions well, so even
-when your several nodes are unavailable for some time, you will still
-be able to easily recover from that.
+Data in Cassandra is also partitioned: nodes store and serve only a
+subset of data, and when new nodes are added to or removed from the
+cluster, rebalancing is done in a way that minimizes intra-cluster
+traffic.
+
+Cassandra handles network partitions well, so even
+when your several nodes become unreachable or unavailable, Cassandra cluster
+may still be able to stay available (serve client requests).
+
+Clients can connect to any node to perform any operation: there is no
+master nodes in Cassandra.
 
 
 ## Overview
 
-Any distributed system, be it a database, computing backend, or web application
-is facing several problems:
+Any distributed system, in particular databases, face several problems:
 
   * __Load Balancing__: if you have more than one node in the system, the load should
     be evenly distributed between them.
