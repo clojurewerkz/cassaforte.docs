@@ -183,11 +183,39 @@ Cassandra provides a more familiar interface that builds on the same internal ma
 To lean how it works and what limitations CQL 3 has, see [The CQL 3/Cassandra Mapping](http://www.slideshare.net/DataStax/understanding-how-cql3-maps-to-cassandras-internal-data-structure).
 
 
+## Tunable Consistency
+
+TBD
+
+
+## Partitioning
+
+TBD
+
+
+## Gossip Protocol
+
+TBD
+
+
+## Hinted Hand-off
+
+TBD
+
+
 ## Wrapping Up
 
 Cassandra is heavily influenced by the Dynamo paper and Big Table's data model
 and combines many prominent ideas in distributed system research.
 It provides a way to tune CAP properties however the developer sees fit.
+
+
+## Related Materials
+
+ * [Cassandra Architecture in Brief](http://www.datastax.com/documentation/cassandra/2.0/cassandra/architecture/architectureIntro_c.html)
+ * [Cassandra Architecture Overview](http://wiki.apache.org/cassandra/ArchitectureOverview)
+ * [Understanding Dynamo](http://nosqltapes.com/video/understanding-dynamo-with-andy-gross) (video)
+ * [Riak Compared to Cassandra](http://docs.basho.com/riak/1.2.1/references/appendices/comparisons/Riak-Compared-to-Cassandra/)
 
 
 ## What to Read Next
