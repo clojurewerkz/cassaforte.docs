@@ -10,14 +10,21 @@ issues with reconnection, load-balancing, retries, compression, tunable write/re
 levels and so on.
 
 
-## Reconnection
+## What version of Cassaforte does this guide cover?
 
-When the network connection fails, there is more than one way to handle it.
-Cassaforte can schedule reconnection according to the given reconnection policy.
+This guide covers Cassaforte 2.0 (including preview releases).
 
-Internally, the DataStax driver receives and distributes notifications Cluster detects that node
-is up or down via StateListener. At any given point in time it is possible to check wether host
-is up or down by checking `clojurewerkz.cassaforte.client/get-hosts` `is-up` key.
+
+## Reconnection Policies
+
+When network connection fails, there is more than one way to handle
+it.  Cassaforte can schedule reconnection according to the given
+reconnection policy.
+
+Internally, the DataStax driver receives and distributes notifications
+Cluster detects that node is up or down via StateListener. At any
+given point in time it is possible to check wether host is up or down
+by checking `clojurewerkz.cassaforte.client/get-hosts` `is-up` key.
 
 Reconnection uses an internal schedules that relies on one of:
 
@@ -41,7 +48,7 @@ of base delay that will exponentially increase until it reaches 1000 millisecond
 
 Will wait for 100 milliseconds between reconnection attempts.
 
-## Retry
+## Retry Policies
 
 If connection to the host is in order, but query still fails, it is important to set an optimal
 query retry policy.
