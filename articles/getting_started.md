@@ -189,7 +189,9 @@ one application.
 ```clj
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query    :refer :all]
+            ))
 
 (let [conn (cc/connect ["127.0.0.1"])]
   (cql/create-keyspace conn "cassaforte_keyspace"
