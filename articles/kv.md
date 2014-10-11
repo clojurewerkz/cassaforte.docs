@@ -126,7 +126,7 @@ Next, query a user by name:
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name "Alex")))
+  (cql/select conn table (where [[= :name "Alex"]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
@@ -146,7 +146,7 @@ Next, query for rows that match any of the values given in a vector (so so-calle
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name [:in ["Alex" "Robert"]])))
+  (cql/select conn table (where [[:in :name ["Alex" "Robert"]]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Robert", :age 25, :city "Berlin"}]
 ```
@@ -188,7 +188,7 @@ possible:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex")
+          (where [[= :username "Alex"]])
           (order-by [:post_id :desc])))
 
 ;; => [{:post_id "post3"}
@@ -217,9 +217,9 @@ Finally, you can use range queries to get a slice of data:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex"
-                 :post_id [> "post1"]
-                 :post_id [< "post3"])))
+          (where [[= :username "Alex"]
+                  [> :post_id "post1"]
+                  [< :post_id "post3"]])))
 ;; => [{:post_id "post2"}]
 ```
 
@@ -472,7 +472,7 @@ Next, query a user by name:
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name "Alex")))
+  (cql/select conn table (where [[= :name "Alex"]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
@@ -492,7 +492,7 @@ Next, query for rows that match any of the values given in a vector (so so-calle
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name [:in ["Alex" "Robert"]])))
+  (cql/select conn table (where [[:in :name ["Alex" "Robert"]]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Robert", :age 25, :city "Berlin"}]
 ```
@@ -534,7 +534,7 @@ possible:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex")
+          (where [[= :username "Alex"]])
           (order-by [:post_id :desc])))
 
 ;; => [{:post_id "post3"}
@@ -563,9 +563,9 @@ Finally, you can use range queries to get a slice of data:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex"
-                 :post_id [> "post1"]
-                 :post_id [< "post3"])))
+          (where [[= :username "Alex"]
+                  [> :post_id "post1"]
+                  [< :post_id "post3"]])))
 ;; => [{:post_id "post2"}]
 ```
 
@@ -598,14 +598,19 @@ In order to limit results of your query, use `limit` clause:
 SELECT * FROM "user_posts" LIMIT 1;
 ```
 
-#### Paginating through results
+#### Paginating Through Results
 
-Cassaforte has support for more convenient pagination queries.
+Pagination with Cassandra can at times be less convenient than with relational databases.
+Fortunately, Cassaforte provides a convenience function `clojurewerkz.cassaforte.cql/iterate-table`
+that is sufficient for many cases. This section first introduces the strategy used by
+Cassaforte and then provides and example of `clojurewerkz.cassaforte.cql/iterate-table` at
+the end, so you may want to skip to that.
 
-To paginate through the complete table (sometimes called __iterate-world__),
-use the `tokens` strategy for that. Token-based pagination is based on every row
-having a special "token" field that sorting can be performed on. Then fetch
-a batch of rows, take the last one and to load the next page, use the token.
+To paginate through contents of an entire table, it is common to use the so called "token
+strategy". Token-based pagination is based on every row having
+a special "token" field that sorting can be performed on. Then fetch a
+batch of rows, take the last one and to load the next page, use the
+token.
 
 To demonstrate, consider the following table:
 
@@ -683,7 +688,7 @@ SELECT * FROM users WHERE token(name) > token('name_53') LIMIT 10;
 
 This will return next page in the desired order.
 
-Cassaforte provides a convenience function, which uses lazy sequences to
+Cassaforte provides a convenience function `clojurewerkz.cassaforte.cql/iterate-table`, which uses lazy sequences to
 implement the algorithm described above.
 
 In the example below, we iterate over `users` collection, using `name`
@@ -696,7 +701,7 @@ as a partition key, and get `10` results per page:
             [clojurewerkz.cassaforte.query :refer :all]))
 
 (let [conn (cc/connect ["127.0.0.1"])]
-  (cql/iterate-table conn :users :name 10))
+  (cql/iterate-table conn :users [[= :name 10]]))
 ```
 
 

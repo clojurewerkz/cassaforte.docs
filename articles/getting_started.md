@@ -29,7 +29,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 ### With Leiningen
 
 ```clj
-[clojurewerkz/cassaforte "2.0.0-beta3"]
+[clojurewerkz/cassaforte "2.0.0-beta8"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from
@@ -52,7 +52,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>2.0.0-beta3</version>
+  <version>2.0.0-beta8</version>
 </dependency>
 ```
 
@@ -78,9 +78,9 @@ In order to install Cassandra on Mac OS X (with [homebrew](http://brew.sh/)), ru
 brew install cassandra
 ```
 
-And follow homebrew instructions for starting it.
+And follow [Homebrew](http://brew.sh/) instructions for starting it.
 
-On Ubuntu, first make sure you're running latest version of 6 or 7 Java:
+On Ubuntu, first make sure you're running Java 7 or later:
 
 ```sh
 java -version
@@ -163,6 +163,7 @@ schema operations, pagination, iteration over tables, and so on.
 used by functions in `clojurewerkz.cassaforte.cql`. Functions in this namespace
 are usually referred to in the current namespace (using `:refer`).
 
+`clojurewerkz.cassaforte.query` builds on top of [Hayt](https://github.com/mpenet/hayt) 2.0.
 
 ## Two Ways to Execute Queries
 
@@ -190,14 +191,13 @@ one application.
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query    :refer :all]
-            ))
+            [clojurewerkz.cassaforte.query    :refer :all]))
 
 (let [conn (cc/connect ["127.0.0.1"])]
   (cql/create-keyspace conn "cassaforte_keyspace"
                    (with {:replication
                           {:class "SimpleStrategy"
-                           :replication_factor 1 }})))
+                           :replication_factor 1}})))
 ```
 
 will execute the following query:
@@ -458,7 +458,7 @@ Next, query a user by name:
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name "Alex")))
+  (cql/select conn table (where [[= :name "Alex"]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
@@ -478,7 +478,7 @@ Next, query for rows that match any of the values given in a vector (so so-calle
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where :name [:in ["Alex" "Robert"]])))
+  (cql/select conn table (where [[:in :name ["Alex" "Robert"]]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Robert", :age 25, :city "Berlin"}]
 ```
@@ -520,7 +520,7 @@ possible:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex")
+          (where [[= :username "Alex"]])
           (order-by [:post_id :desc])))
 
 ;; => [{:post_id "post3"}
@@ -549,9 +549,9 @@ Finally, you can use range queries to get a slice of data:
   ;; For brevity, we select :post_id column only
   (cql/select conn table
           (columns :post_id)
-          (where :username "Alex"
-                 :post_id [> "post1"]
-                 :post_id [< "post3"])))
+          (where [[= :username "Alex"]
+                  [> :post_id "post1"]
+                  [< :post_id "post3"]])))
 ;; => [{:post_id "post2"}]
 ```
 
