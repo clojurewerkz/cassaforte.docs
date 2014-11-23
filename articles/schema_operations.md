@@ -24,7 +24,7 @@ one application.
 
 ``
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -52,7 +52,7 @@ advised for production.
 Before you can use a keyspace, you have to switch to it with
 `clojurewerkz.cassaforte.cql/use-keyspace`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -79,7 +79,7 @@ To create a table, use `create-table` function.
 To to create a table with a single primary key, specify
 it in `primary-key` in column definitions:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -103,7 +103,7 @@ CREATE TABLE "users" (age int,
 To create a table with a composite primary key, pass a vector holding the names of
 columns that the key will be composed of:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -137,7 +137,7 @@ rename and change types of the existing ones:
 
 Change the type of a column to integer:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -156,7 +156,7 @@ ALTER TABLE "users" ALTER post_id TYPE int;
 
 Here's how to add an integer column:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -175,7 +175,7 @@ ALTER TABLE "users" ADD age integer;
 
 It is possible to rename a column:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -198,7 +198,7 @@ Cassandra tables can have collection columns, that is, columns
 of types list, map, and set. To define them with Cassaforte, use
 ``, ``, and ``:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
