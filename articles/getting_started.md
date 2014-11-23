@@ -396,7 +396,7 @@ in `clojurewerkz.cassaforte.client/prepared`:
 ```
 
 You can learn more about prepared statements in the
-[Key Value Operations](http://clojurecassandra.info/articles/kv.html) guide.
+[CQL Operations](http://clojurecassandra.info/articles/cql.html) guide.
 
 
 ## Querying Cassandra
@@ -597,7 +597,7 @@ Cassandra provide.
 
 ## What to read next
 
-  * [Key Value Operations](/articles/kv.html)
+  * [CQL Operations](/articles/cql.html)
   * [Schema Operations](/articles/schema_operations.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)

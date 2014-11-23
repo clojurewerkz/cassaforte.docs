@@ -204,6 +204,6 @@ Cassandra provide.
 ## What to read next
 
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
-  * [Key Value Operations](/articles/kv.html)
+  * [CQL Operations](/articles/cql.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)

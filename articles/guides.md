@@ -17,9 +17,9 @@ started with it. It should take about 15 minutes to read and study the
 provided code examples.
 
 
-### [Key/Value Operations](/articles/kv.html)
+### [Using CQL](/articles/cql.html)
 
-Key/value operations in-depth guide. Covers topics such as:
+Covers CQL operations besides schema manipulation:
 
   * Inserting values
   * Tuning consistency/availability
