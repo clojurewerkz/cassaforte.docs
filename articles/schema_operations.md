@@ -24,7 +24,7 @@ one application.
 
 ``
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -52,7 +52,7 @@ advised for production.
 Before you can use a keyspace, you have to switch to it with
 `clojurewerkz.cassaforte.cql/use-keyspace`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -68,7 +68,7 @@ USE "cassaforte_keyspace";
 ```
 
 
-## Creating and Updating Tables
+## Creating Tables
 
 Cassandra historically is a column-oriented database but CQL 3 makes its data
 model look a lot more familair to relational database users. Data is stored
@@ -79,7 +79,7 @@ To create a table, use `create-table` function.
 To to create a table with a single primary key, specify
 it in `primary-key` in column definitions:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -103,7 +103,7 @@ CREATE TABLE "users" (age int,
 To create a table with a composite primary key, pass a vector holding the names of
 columns that the key will be composed of:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -137,7 +137,7 @@ rename and change types of the existing ones:
 
 Change the type of a column to integer:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -156,7 +156,7 @@ ALTER TABLE "users" ALTER post_id TYPE int;
 
 Here's how to add an integer column:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -175,7 +175,7 @@ ALTER TABLE "users" ADD age integer;
 
 It is possible to rename a column:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -192,6 +192,32 @@ which will use the following CQL:
 ALTER TABLE "users" RENAME username TO name;
 ```
 
+## Collection Columns
+
+Cassandra tables can have collection columns, that is, columns
+of types list, map, and set. To define them with Cassaforte, use
+``, ``, and ``:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn "thingies"
+                (column-definitions {:name :varchar
+                                     :test_map  (map-type :varchar :varchar)
+                                     :test_set  (set-type :int)
+                                     :test_list (list-type :varchar)
+                                     :primary-key [:name]})))
+```
+
+When data is loaded from Cassandra, Cassaforte will convert the types to
+their respective immutable Clojure counterparts.
+
+
+
 ## Wrapping Up
 
 Cassaforte provides a nice way to manipulate
@@ -204,6 +230,6 @@ Cassandra provide.
 ## What to read next
 
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
-  * [Key Value Operations](/articles/kv.html)
+  * [CQL Operations](/articles/cql.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)

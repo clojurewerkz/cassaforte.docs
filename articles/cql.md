@@ -28,7 +28,7 @@ This guide covers Cassaforte 2.0 (including preview releases).
 
 Consider the following table:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -52,7 +52,7 @@ CREATE TABLE users
 
 To insert a row in a table, use `clojurewerkz.cassaforte.cql/insert`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -96,7 +96,7 @@ INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 
 Most straightforward thing is to select all users:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -118,7 +118,7 @@ SELECT * FROM "users";
 
 Next, query a user by name:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -138,7 +138,7 @@ SELECT * FROM "users" WHERE name = 'Alex';
 
 Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -161,23 +161,23 @@ Sorting and range queries in Cassandra have limitations compared to
 relational databases. Sorting is only possible when partition key is restricted by either
 exact match or `IN`. For example, having these `user_posts`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users_posts"]
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post1" :body "first post body"})
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post2" :body "second post body"})
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
 You can't sort all the posts by post_id. But if you say that you want
 to get all the posts from user Alex and sort them by `post_id`, it's
 possible:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -206,7 +206,7 @@ SELECT post_id FROM "user_posts"
 
 Finally, you can use range queries to get a slice of data:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -234,7 +234,7 @@ SELECT post_id FROM "user_posts"
 
 In order to limit results of your query, use `limit` clause:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -288,7 +288,7 @@ The values used are application-specific.
 
 Following operation will be performed with consistenct level of `:one`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -318,7 +318,7 @@ You can see `timestamp` value set by Cassandra for every column in a
 row. In order to make a write with manually set timestamp, you should
 use `(using :timestamp)` clause in your query:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -346,7 +346,7 @@ You can also specify optional TTL (Time To Live) for column values. If
 you do so, column values will expire after specified amount of time.
 
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -392,7 +392,7 @@ INSERT INTO users (name, city, age) VALUES (?, ?, ?);
 
 In order to execute a prepared query, you can use `client/execute` function:
 
-```clj
+``` clojure
 (client/execute
  (client/as-prepared "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"
                      "Alex" "Munich" (int 19))
@@ -404,7 +404,7 @@ against the cluster. However, we provide a higher-level API for working with pre
 You can wrap any query from `cql` namespace into `client/prepared`, which will execute query as
 prepared one:
 
-```clj
+``` clojure
 (client/prepared
  (insert :users {:name "Alex" :city "Munich" :age (int 19)}))
 ```
@@ -442,7 +442,7 @@ INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 
 Most straightforward thing is to select all users:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -464,7 +464,7 @@ SELECT * FROM "users";
 
 Next, query a user by name:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -484,7 +484,7 @@ SELECT * FROM "users" WHERE name = 'Alex';
 
 Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -507,7 +507,7 @@ Sorting and range queries in Cassandra have limitations compared to
 relational databases. Sorting is only possible when partition key is restricted by either
 exact match or `IN`. For example, having these `user_posts`:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]))
@@ -523,7 +523,7 @@ You can't sort all the posts by post_id. But if you say that you want
 to get all the posts from user Alex and sort them by `post_id`, it's
 possible:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -552,7 +552,7 @@ SELECT post_id FROM "user_posts"
 
 Finally, you can use range queries to get a slice of data:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -580,7 +580,7 @@ SELECT post_id FROM "user_posts"
 
 In order to limit results of your query, use `limit` clause:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -614,7 +614,7 @@ token.
 
 To demonstrate, consider the following table:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -634,7 +634,7 @@ CREATE TABLE users (age int, name varchar, city varchar, PRIMARY KEY (name));
 
 Add 100 entries to it:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -647,7 +647,7 @@ Add 100 entries to it:
 
 Get the first page:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -670,7 +670,7 @@ key value in that case) of the last user in the resulting
 collection. Say the value was `name_53`. In order to get the next
 __page__, you should use `token` function:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -694,7 +694,7 @@ implement the algorithm described above.
 In the example below, we iterate over `users` collection, using `name`
 as a partition key, and get `10` results per page:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -718,7 +718,7 @@ Consider a `tv_series` table, which will use a
 compound key. Partition key will be `series_title`, `episode_id` will also be
 part of the key:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -741,7 +741,7 @@ CREATE TABLE tv_series (episode_title text,
 
 Populate the table:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -758,7 +758,7 @@ If you lock partition key by using equality `WHERE series_title =
 'Simpsons')`, you can perform range queries on `episode_id` (which is
 a second part of compound key):
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -778,7 +778,7 @@ In the same manner, you can use `>=`, `>`, `<` and `<=` operators for
 performing range queries. In addition, you can query for a closed
 range (__from__ .. __to__):
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -801,7 +801,7 @@ When partition key is used in query condition, you can also run
 queries with `ORDER BY` clause, which will order results by any part
 of the key except for the partition key:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -841,7 +841,7 @@ CREATE TABLE users
    PRIMARY KEY (name));
 ```
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -860,7 +860,7 @@ CREATE INDEX ON users (city);
 Now, it is possible to query for all users of certain `age` living in a certain `city` using
 `ALLOW FILTERING` clause:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -877,12 +877,91 @@ Now, it is possible to query for all users of certain `age` living in a certain 
 SELECT * FROM users WHERE city = 'Munich' AND age > 5 ALLOW FILTERING;
 ```
 
+### Collection Columns
+
+Cassandra tables can have collection columns, that is, columns
+of types list, map, and set. To define them with Cassaforte, use
+`qbits.hayt.utils/list-type`, `qbits.hayt.utils/map-type`,
+and `qbits.hayt.utils/set-type`, respectively:
+
+``` clojure
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn :thingies
+                (column-definitions {:name :varchar
+                                     :test_map  (map-type :varchar :varchar)
+                                     :test_set  (set-type :int)
+                                     :test_list (list-type :varchar)
+                                     :primary-key [:name]})))
+```
+
+When data is loaded from Cassandra, Cassaforte will convert the types to
+their respective immutable Clojure counterparts.
+
+To add an entry to a map, use the `+` operator and a Clojure map:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_map [+ {"key1" "value1"
+                         "key2" "value2"}]}
+          (where :name "thingie1")))
+
+```
+
+Similarly, to append a value to a list column:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [+ ["value1"]]}
+          (where :name "thingie1")))
+
+```
+
+Note that in the example above we use a vector but a Clojure list could
+do, too.
+
+Finally, to add a value to a set:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [+ #{"value1"}]}
+          (where :name "thingie1")))
+
+```
+
+To remove a value from a list column:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [- ["value1"]]}
+          (where :name "thingie1")))
+
+```
+
+Same with a set:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [- #{"value1"}]}
+          (where :name "thingie1")))
+
+```
+
 
 ### Counters
 
-Cassandra has a powerful concept, __Distributed Counters__. Counter
-columns provide an efficient way to count or sum integer values. It is
-achieved by using atomic increment/decrement operations on values.
+Cassandra supports counter columns (also known as distributed counters). A Counter
+column provides an efficient way to count or sum integer values. It is
+achieved by using atomic increment/decrement operations on column values.
 
 Counter is a special column type, whose value is a 64-bit (signed)
 interger. On write, new value is added (or substracted) to previous
@@ -896,7 +975,7 @@ Consider a table (`user_counters`) with `counter` column, and `name` key
 for counting user-specific operations, such as amount of operations
 performed by the user:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
@@ -919,7 +998,7 @@ CREATE TABLE user_counters
 In order to modify (increment or decrement) counter, you can use the
 following DSL syntax:
 
-```clj
+``` clojure
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
