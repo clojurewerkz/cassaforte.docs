@@ -168,9 +168,9 @@ exact match or `IN`. For example, having these `user_posts`:
 
 (let [conn  (cc/connect ["127.0.0.1"])
       table "users_posts"]
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post1" :body "first post body"})
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post2" :body "second post body"})
+  (cql/insert conn "user_posts" {:username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
 You can't sort all the posts by post_id. But if you say that you want
