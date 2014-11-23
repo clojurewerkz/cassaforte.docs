@@ -936,6 +936,26 @@ Finally, to add a value to a set:
 
 ```
 
+To remove a value from a list column:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [- ["value1"]]}
+          (where :name "thingie1")))
+
+```
+
+Same with a set:
+
+``` clojure
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/update conn :thingies
+          {:test_list [- #{"value1"}]}
+          (where :name "thingie1")))
+
+```
+
 
 ### Counters
 
