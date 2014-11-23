@@ -68,7 +68,7 @@ USE "cassaforte_keyspace";
 ```
 
 
-## Creating and Updating Tables
+## Creating Tables
 
 Cassandra historically is a column-oriented database but CQL 3 makes its data
 model look a lot more familair to relational database users. Data is stored
@@ -191,6 +191,32 @@ which will use the following CQL:
 ```sql
 ALTER TABLE "users" RENAME username TO name;
 ```
+
+## Collection Columns
+
+Cassandra tables can have collection columns, that is, columns
+of types list, map, and set. To define them with Cassaforte, use
+``, ``, and ``:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cql/create-table conn "thingies"
+                (column-definitions {:name :varchar
+                                     :test_map  (map-type :varchar :varchar)
+                                     :test_set  (set-type :int)
+                                     :test_list (list-type :varchar)
+                                     :primary-key [:name]})))
+```
+
+When data is loaded from Cassandra, Cassaforte will convert the types to
+their respective immutable Clojure counterparts.
+
+
 
 ## Wrapping Up
 
