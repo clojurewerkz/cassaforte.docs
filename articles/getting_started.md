@@ -33,7 +33,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 ```
 
 Please note that Cassaforte works with Clojure versions starting from
-1.5, to satisfy other dependency requirements.
+1.6, to satisfy other dependency requirements.
 
 ### With Maven
 
