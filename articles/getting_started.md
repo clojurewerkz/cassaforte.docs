@@ -145,6 +145,15 @@ simply them in a collection:
 (cc/connect ["127.0.0.1" "localhost" "another.node.local"])
 ```
 
+Options can be passed after seed node list:
+
+```clj
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+(cc/connect ["127.0.0.1"] {:keyspace "myapp_development" :protocol-version 2})
+```
+
 ## Cassaforte API Overview
 
 `clojurewerkz.cassaforte.client` namespace contains functions for
