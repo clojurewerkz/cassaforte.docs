@@ -383,36 +383,12 @@ The example above will use the following CQL:
 INSERT INTO "users" (name, age) VALUES ('Alex', 19);
 ```
 
-## Using Prepared Statements
-
-Prepared statements are parsed on the database side only once, and
-stored for further execution, during which only prepared statement id
-is transferred. Prepared statements will be covered in more detail in
-the rest of the guides.
-
-To execute a group of queries using prepared statements, wrap them
-in `clojurewerkz.cassaforte.client/prepared`:
-
-```clj
-(ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
-
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cc/prepared
-     (cql/insert conn "users" {:name "Alex" :age (int 19)})))
-```
-
-You can learn more about prepared statements in the
-[CQL Operations](http://clojurecassandra.info/articles/cql.html) guide.
-
-
 ## Querying Cassandra
 
-The real power of CQL comes in querying. You can use standard equality queries,
+The real power of CQL comes in querying. You can choose between equality queries,
 `IN` queries, and range queries.
 
-The examples above need some data to be in the "users" table:
+The examples in this section need some data to be in the "users" table:
 
 ``` clojure
 (ns cassaforte.docs
@@ -426,7 +402,7 @@ The examples above need some data to be in the "users" table:
   (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
 ```
 
-The above example will execute the CQL you expect:
+The above example will execute the following CQL:
 
 ```sql
 INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
@@ -434,7 +410,9 @@ INSERT INTO "users" (name, city, age) VALUES ('Robert', 'Berlin', 25);
 INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 ```
 
-Most straightforward thing is to select all users:
+### Unconditional Query
+
+First, a query that returns rows unconditionally:
 
 ```clj
 (ns cassaforte.docs
@@ -456,6 +434,8 @@ In CQL, the query above will look like this:
 SELECT * FROM "users";
 ```
 
+### Equality Query
+
 Next, query a user by name:
 
 ```clj
@@ -476,7 +456,9 @@ The CQL executed this time will be
 SELECT * FROM "users" WHERE name = 'Alex';
 ```
 
-Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
+### IN Queries
+
+Next, query for rows that match any of the values from a collection (the so so-called `IN` query):
 
 ```clj
 (ns cassaforte.docs
@@ -497,6 +479,8 @@ The `IN` query is named after the CQL operator it uses:
 SELECT * FROM "users" WHERE name IN ('Alex', 'Robert');
 ```
 
+### Sorting Results
+
 Sorting and range queries in Cassandra have limitations compared to
 relational databases. Sorting is only possible when partition key is restricted by either
 exact match or `IN`. For example, having these `user_posts`:
@@ -513,7 +497,7 @@ exact match or `IN`. For example, having these `user_posts`:
   (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
-You can't sort all the posts by post_id. But if you say that you want
+You can't sort all the posts by `post_id`. But if you say that you want
 to get all the posts from user Alex and sort them by `post_id`, it's
 possible:
 
@@ -544,6 +528,8 @@ SELECT post_id FROM "user_posts"
   ORDER BY post_id desc;
 ```
 
+### Range Queries
+
 Finally, you can use range queries to get a slice of data:
 
 ```clj
@@ -572,7 +558,7 @@ SELECT post_id FROM "user_posts"
     AND post_id < 'post3';
 ```
 
-In order to limit results of your query, use `limit` clause:
+In order to limit results of a query, use the `limit` clause:
 
 ```clj
 (ns cassaforte.docs
@@ -591,6 +577,29 @@ In order to limit results of your query, use `limit` clause:
 ```sql
 SELECT * FROM "user_posts" LIMIT 1;
 ```
+
+## Using Prepared Statements
+
+Prepared statements are parsed on the database side only once, and
+stored for further execution, during which only prepared statement id
+is transferred. Prepared statements will be covered in more detail in
+the rest of the guides.
+
+To execute a group of queries using prepared statements, wrap them
+in `clojurewerkz.cassaforte.client/prepared`:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (cc/prepared
+     (cql/insert conn "users" {:name "Alex" :age (int 19)})))
+```
+
+Learn more about prepared statements in the
+[CQL Operations](http://clojurecassandra.info/articles/cql.html) guide.
 
 ## Wrapping Up
 
