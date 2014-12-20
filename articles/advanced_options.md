@@ -26,6 +26,9 @@ about nodes in the cluster being down or up.
 There are 2 reconnection policies supported out of the box:
 
  * Exponential policy
+ * Constant policy
+
+### Exponential policy
 
 Exponential policy waits exponentially longer between reconnection
 attempts. Once maximum delay is reached, delay won't grow anymore.
@@ -39,11 +42,14 @@ to instantiate the policy:
 (cp/exponential-reconnection-policy 100 1000)
 ```
 
-`clojurewerkz.cassaforte.policies/exponential-reconnection-policy` is used
-to instantiate the policy:
+### Constant reconnectoin policy
 
 Constant reconnectoin policy waits for the fixed period of time
-between reconnection attempts:
+between reconnection attempts.
+
+`clojurewerkz.cassaforte.policies/constant-reconnection-policy` is used
+to instantiate the policy:
+
 
 ```clojure
 (client/constant-reconnection-policy 100)
@@ -59,10 +65,12 @@ Cassaforte supports 3 load balancing policies:
 
  * Round robin
  * Data center aware round robin
- * Token aware policy
+ * Token aware
 
-Use `clojurewerkz.cassaforte.policies/round-robin-policy`, `clojurewerkz.cassaforte.policies/dc-aware-round-robin-policy`, and `clojurewerkz.cassaforte.policies/token-aware-policy`
-functions to instantiate them:
+Use `clojurewerkz.cassaforte.policies/round-robin-policy`,
+`clojurewerkz.cassaforte.policies/dc-aware-round-robin-policy`, and
+`clojurewerkz.cassaforte.policies/token-aware-policy` functions to
+instantiate them:
 
 ``` clojure
 (require '[clojurewerkz.cassaforte.policies :as cp])
