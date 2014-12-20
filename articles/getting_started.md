@@ -29,7 +29,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 ### With Leiningen
 
 ```clj
-[clojurewerkz/cassaforte "2.0.0-rc4"]
+[clojurewerkz/cassaforte "2.0.0"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from
@@ -52,7 +52,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>2.0.0-rc4</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
