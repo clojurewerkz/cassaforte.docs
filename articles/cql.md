@@ -1,30 +1,31 @@
 ---
-title: "Key/Value Operations"
+title: "Working With Cassandra Using Clojure, CQL, and Cassaforte"
 layout: article
 ---
 
 ## About this guide
 
-This guide explains more complex Key/Value operations, such as
+This guide covers most CQL operations, such as
 
-  * Inserting values
-  * Tuning consistency/availability
-  * Timestampls and TTL
-  * Prepared Statements
+  * Inserting data
+  * Querying
+  * Ordering
   * Collection Types
   * Counter Columns
+  * Timestampls and TTL
+  * Prepared Statements
   * Range queries
   * Pagination
   * Filtering
-  * Ordering
+  * Tuning consistency/availability per-request
 
-This guide relies on certain features that are covered in [Advanced Client Options](/articles/advanced_client_options.html) guide.
+This guide relies on certain features that are covered in the [Advanced Client Options](/articles/advanced_client_options.html) guide.
 
 ## What version of Cassaforte does this guide cover?
 
 This guide covers Cassaforte 2.0 (including preview releases).
 
-## Inserting Rows
+## Inserting Rows (INSERT)
 
 Consider the following table:
 
@@ -67,12 +68,13 @@ The example above will use the following CQL:
 INSERT INTO "users" (name, age) VALUES ('Alex', 19);
 ```
 
-## Fetching Rows
+## Querying (SELECT)
 
-The real power of CQL comes in querying. You can use standard equality queries,
+The real power of CQL comes in querying. You can perform standard equality queries,
 `IN` queries, and range queries.
 
-The examples above need some data to be in the "users" table:
+The examples used in this section need some data to be seeded to the "users" table
+first:
 
 ``` clojure
 (ns cassaforte.docs
@@ -86,7 +88,7 @@ The examples above need some data to be in the "users" table:
   (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
 ```
 
-The above example will execute the CQL you expect:
+The above code will execute the following CQL:
 
 ```sql
 INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
@@ -94,7 +96,7 @@ INSERT INTO "users" (name, city, age) VALUES ('Robert', 'Berlin', 25);
 INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 ```
 
-Most straightforward thing is to select all users:
+### Querying All Rows
 
 ``` clojure
 (ns cassaforte.docs
@@ -116,6 +118,8 @@ In CQL, the query above will look like this:
 SELECT * FROM "users";
 ```
 
+### Querying With Equality Conditions (Equality Operator)
+
 Next, query a user by name:
 
 ``` clojure
@@ -135,6 +139,8 @@ The CQL executed this time will be
 ```sql
 SELECT * FROM "users" WHERE name = 'Alex';
 ```
+
+### IN Queries
 
 Next, query for rows that match any of the values given in a vector (so so-called `IN` query):
 
@@ -157,6 +163,8 @@ The `IN` query is named after the CQL operator it uses:
 SELECT * FROM "users" WHERE name IN ('Alex', 'Robert');
 ```
 
+### Sorting (ORDER BY)
+
 Sorting and range queries in Cassandra have limitations compared to
 relational databases. Sorting is only possible when partition key is restricted by either
 exact match or `IN`. For example, having these `user_posts`:
@@ -173,7 +181,7 @@ exact match or `IN`. For example, having these `user_posts`:
   (cql/insert conn "user_posts" {:username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
-You can't sort all the posts by post_id. But if you say that you want
+You can't sort all the posts by `post_id`. But if you say that you want
 to get all the posts from user Alex and sort them by `post_id`, it's
 possible:
 
@@ -204,7 +212,9 @@ SELECT post_id FROM "user_posts"
   ORDER BY post_id desc;
 ```
 
-Finally, you can use range queries to get a slice of data:
+### Range Queries
+
+It is possible to use range queries to get a slice of data:
 
 ``` clojure
 (ns cassaforte.docs
@@ -232,7 +242,9 @@ SELECT post_id FROM "user_posts"
     AND post_id < 'post3';
 ```
 
-In order to limit results of your query, use `limit` clause:
+### LIMIT
+
+In order to limit results of a query, use the `limit` clause:
 
 ``` clojure
 (ns cassaforte.docs
@@ -254,37 +266,28 @@ SELECT * FROM "user_posts" LIMIT 1;
 
 ### Tuning Consistency
 
-With Cassandra, it is possible to tune consistency on a per-query basis.
-To do that, wrap your database call into `clojurewerkz.cassaforte.policies/with-consistency-level`:
+With Cassandra, it is possible to tune [consistency level](https://academy.datastax.com/courses/understanding-cassandra-architecture/introducing-consistency-levels) on a per-query basis.
+To do that, wrap a database call into `clojurewerkz.cassaforte.policies/with-consistency-level`:
 
 Available consistency levels are:
 
   * `:any`: write must be written to at least one node. `:any` will succeed even if all replica nodes
-    are down and __hinted handoff__ write was made. Although in that case write will not become readable
-    until replica nodex for the given key recover.
-  * `:one`: write must be written to commit log and memory table of at least one replica node.
-  * `:two`: write must be written to commit log and memory table of at least two replica nodes.
-  * `:three`: write must be written to commit log and memory table of at least three replica nodes.
-  * `:quorum`: write must be written to commit log and memory table to quorum of replica nodes.
+    are down and a __hinted handoff__ write was made. Although in that case write will not become readable
+    until replica nodex for the given key recover
+  * `:one`: write must be written to commit log and memory table of at least one replica node
+  * `:two`: write must be written to commit log and memory table of at least two replica nodes
+  * `:three`: write must be written to commit log and memory table of at least three replica nodes
+  * `:quorum`: write must be written to commit log and memory table to quorum of replica nodes
   * `:local-quorum`: write must be written to commit log and memory table to quorum of replica nodes
-    located in the same datacenter as coordinator node.
+     located in the same data center as the coordinator node
   * `:each-quorum`: write must be written to commit log and memory table to quorum of replica nodes
-    in all datacenters.
-  * `:all`: write must be written to commit log and memory table of all replica nodes for given key.
+    in all data centers
+  * `:serial`: achieves linearizable consistency for lightweight transactions by preventing unconditional updates
+  * `:local_serial`: like `:serial` but confined to the local data center
+  * `:all`: write must be written to commit log and memory table of all replica nodes for given key
 
-It is clear that `:all` has strongest __Consistency__, but weakest
-__Availability__ guarantees, because all the nodes should be up during
-the write, whereas `:one` has strongest __Availability__ but weakest
-__Consistency__ guarantees, because if the node went down before
-replicating data to other nodes, it won't be possible to read it until
-the node is back up.
-
-Quorum is calculated as `(replication-factor / 2) + 1` ("the
-majority"), so for replication factor of 3, quorum would be 2, which
-means that it will tolerate when 1 node is down. For replication
-factor of 6, quorum is 4, which tolerates 2 nodes are down.
-
-The values used are application-specific.
+Please refer to [Cassandra documentation on consistency levels](http://www.datastax.com/documentation/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html)
+for more info.
 
 Following operation will be performed with consistenct level of `:one`:
 
