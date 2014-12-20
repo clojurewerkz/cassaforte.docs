@@ -614,7 +614,7 @@ Cassandra provide.
 
 ## What to read next
 
-  * [CQL Operations](/articles/cql.html)
+  * [Working with Cassandra Using CQL](/articles/cql.html)
   * [Schema Operations](/articles/schema_operations.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)

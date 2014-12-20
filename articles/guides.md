@@ -17,20 +17,21 @@ started with it. It should take about 15 minutes to read and study the
 provided code examples.
 
 
-### [Using CQL](/articles/cql.html)
+### [Working with Cassandra Using CQL](/articles/cql.html)
 
 Covers CQL operations besides schema manipulation:
 
-  * Inserting values
-  * Tuning consistency/availability
-  * Timestampls and TTL
-  * Prepared Statements
+  * Inserting data
+  * Querying
+  * Ordering
   * Collection Types
   * Counter Columns
+  * Timestampls and TTL
+  * Prepared Statements
   * Range queries
   * Pagination
   * Filtering
-  * Ordering
+  * Tuning consistency/availability per-request
 
 ###  [Schema Operations](/articles/schema_operations.html)
 
