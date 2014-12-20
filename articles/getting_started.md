@@ -71,8 +71,9 @@ Cassaforte requires Cassandra 2.0. The most recent release is is recommended.
 
 ## Installing Cassandra
 
-Cassandra installation procedure depends on your operating system. See [Installing and Configuring Cassandra](https://academy.datastax.com/courses/installing-and-configuring-cassandra)
-in DataStax Academy.
+Cassandra installation procedure depends on your operating system.
+
+### OS X
 
 In order to install Cassandra on Mac OS X (with [homebrew](http://brew.sh/)), run:
 
@@ -80,41 +81,37 @@ In order to install Cassandra on Mac OS X (with [homebrew](http://brew.sh/)), ru
 brew install cassandra
 ```
 
-And follow [Homebrew](http://brew.sh/) instructions for starting it.
+and follow [Homebrew](http://brew.sh/) instructions for starting it.
 
-On Ubuntu, first make sure you're running Java 7 or later:
+### Debian-based Distributions (Ubuntu, Debian, Mint, etc)
+
+For Ubuntu and Debian, first make sure you're running Java 7 or later:
 
 ```sh
 java -version
 ```
 
-Add the following line to your `/etc/apt/sources.list`:
+and then follow the steps in [Installing DataStax Community on Debian-based systems](http://www.datastax.com/documentation/cassandra/2.1/cassandra/install/installDeb_t.html).
 
-```
-deb http://debian.datastax.com/community stable main
-```
+### RHEL-based Distributions
 
-Add Datastax repository key to your trusted keys:
+See [Installing DataStax Community on RHEL-based systems](http://www.datastax.com/documentation/cassandra/2.1/cassandra/install/installRHEL_t.html).
 
-```sh
-curl -L http://debian.datastax.com/debian/repo_key | sudo apt-key add -
-```
+### Windows
 
-And install package:
+See [Installing DataStax Community on Windows systems](http://www.datastax.com/documentation/getting_started/doc/getting_started/gettingStartedWindows_t.html).
 
-```sh
-sudo apt-get update
-sudo apt-get install dsc20
-```
-
-This will start the service automatically.
+### Where to Learn More
 
 If you want to have a cluster running in VMs, just use [Cassaforte
 Docs Cluster](https://github.com/ifesdjeen/cassaforte_docs_cluster)
 setup, that uses Vagrant.
 
+For more information, see [Installing and Configuring Cassandra](https://academy.datastax.com/courses/installing-and-configuring-cassandra)
+in DataStax Academy.
 
-### Enable CQL Support
+
+## Enable CQL Support
 
 In order to use CQL and Cassaforte, you need to enable CQL
 support. Make sure `start_native_transport` is set to `true` in
@@ -123,6 +120,9 @@ support. Make sure `start_native_transport` is set to `true` in
 ``` yaml
 start_native_transport: true
 ```
+
+For more information, see [Installing and Configuring Cassandra](https://academy.datastax.com/courses/installing-and-configuring-cassandra)
+in DataStax Academy.
 
 ## Connecting To Cassandra
 
