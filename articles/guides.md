@@ -44,7 +44,7 @@ Introduction to how to define and manage Cassandra schema with Cassaforte:
 ### [Key Cassandra Concepts](/articles/cassandra_concepts.html)
 
  * Key concepts behind Cassandra
- * A glossary of terms related to Cassandra.
+ * A glossary of terms related to Cassandra
 
 ### [Advanced Client Options](/articles/advanced_client_options.html) guide
 
