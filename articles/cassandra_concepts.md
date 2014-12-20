@@ -183,24 +183,38 @@ Cassandra provides a more familiar interface that builds on the same internal ma
 To lean how it works and what limitations CQL 3 has, see [The CQL 3/Cassandra Mapping](http://www.slideshare.net/DataStax/understanding-how-cql3-maps-to-cassandras-internal-data-structure).
 
 
-## Tunable Consistency
-
-TBD
-
-
 ## Partitioning
 
-TBD
+See [Introducing the Partitioning Process](https://academy.datastax.com/courses/understanding-cassandra-architecture/introducing-partitioning-process)
+and [Understanding Request Coordination](https://academy.datastax.com/courses/understanding-cassandra-architecture/understanding-request-coordination) in DataStax Academy.
+
+
+## Tunable Consistency
+
+Consistency levels in Cassandra can be configured per request
+to manage availability versus data consitency (accuracy).
+
+See [Introducing Consistency Levels](https://academy.datastax.com/courses/understanding-cassandra-architecture/introducing-consistency-levels)
+and [Understanding Tunable Consistency](https://academy.datastax.com/courses/understanding-cassandra-architecture/understanding-tunable-consistency) in DataStax Academy.
 
 
 ## Gossip Protocol
 
-TBD
+The gossip protocol is a protocol that Cassandra nodes use to discover information about other
+nodes in the cluster. Because this information is transferred from node to the node it knows about,
+such protocols are know as "gossip" or "epidemic".
+
+See [Cassandra Node-based Architecture](https://academy.datastax.com/courses/understanding-cassandra-architecture/introducing-cassandras-node-based-architecture)
+and [Internode Communications](https://academy.datastax.com/courses/understanding-cassandra-architecture/introducing-internode-communications) in DataStax Academy.
 
 
-## Hinted Hand-off
+## Hinted Handoff
 
-TBD
+Hinted handoff is a recovery mechanism that allows nodes temporarily store writes that target other
+nodes that are down or unreachable.
+
+See [Understanding Hinted Handoff](https://academy.datastax.com/courses/understanding-cassandra-architecture/understanding-hinted-handoff)
+in DataStax Academy.
 
 
 ## Wrapping Up
