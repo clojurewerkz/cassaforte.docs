@@ -71,6 +71,9 @@ Cassaforte requires Cassandra 2.0. The most recent release is is recommended.
 
 ## Installing Cassandra
 
+Cassandra installation procedure depends on your operating system. See [Installing and Configuring Cassandra](https://academy.datastax.com/courses/installing-and-configuring-cassandra)
+in DataStax Academy.
+
 In order to install Cassandra on Mac OS X (with [homebrew](http://brew.sh/)), run:
 
 ```sh
