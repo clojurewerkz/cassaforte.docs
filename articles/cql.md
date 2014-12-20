@@ -272,7 +272,7 @@ To do that, wrap a database call into `clojurewerkz.cassaforte.policies/with-con
 Available consistency levels are:
 
   * `:any`: write must be written to at least one node. `:any` will succeed even if all replica nodes
-    are down and a __hinted handoff__ write was made. Although in that case write will not become readable
+    are down and a [hinted handoff](https://academy.datastax.com/courses/understanding-cassandra-architecture/understanding-hinted-handoff) write was made. Although in that case write will not become readable
     until replica nodex for the given key recover
   * `:one`: write must be written to commit log and memory table of at least one replica node
   * `:two`: write must be written to commit log and memory table of at least two replica nodes
@@ -305,8 +305,9 @@ Following operation will be performed with consistenct level of `:one`:
 
 ### Timestamp and TTL
 
-Column values in Cassandra have timestamps associated with them. Even if you do not provide
-a timestamp, it is set by Cassandra internally. You can check it by using `cqlsh` or `cassandra-cli`, both of which ship with Cassandra:
+Column values in Cassandra have timestamps associated with them. Even if a timestamp is not explicitly provided
+a timestamp, it is set by Cassandra internally. It is possible to see this with `cqlsh` or `cassandra-cli`,
+both of which ship with Cassandra:
 
 ```
 > cassandra-cli
