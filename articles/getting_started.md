@@ -111,7 +111,7 @@ For more information, see [Installing and Configuring Cassandra](https://academy
 in DataStax Academy.
 
 
-## Enable CQL Support
+## Make Sure CQL Support is Enabled
 
 In order to use CQL and Cassaforte, you need to enable CQL
 support. Make sure `start_native_transport` is set to `true` in
@@ -123,6 +123,7 @@ start_native_transport: true
 
 For more information, see [Installing and Configuring Cassandra](https://academy.datastax.com/courses/installing-and-configuring-cassandra)
 in DataStax Academy.
+
 
 ## Connecting To Cassandra
 
