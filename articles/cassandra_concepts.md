@@ -226,13 +226,14 @@ It provides a way to tune CAP properties however the developer sees fit.
 
 ## Related Materials
 
- * [Cassandra Architecture in Brief](http://www.datastax.com/documentation/cassandra/2.0/cassandra/architecture/architectureIntro_c.html)
+ * [Understanding Cassandra Architecture](https://academy.datastax.com/courses/understanding-cassandra-architecture) in DataStax Academy
+ * [Cassandra Architecture in Brief](http://www.datastax.com/documentation/cassandra/2.1/cassandra/architecture/architectureIntro_c.html)
  * [Cassandra Architecture Overview](http://wiki.apache.org/cassandra/ArchitectureOverview)
- * [Understanding Dynamo](http://nosqltapes.com/video/understanding-dynamo-with-andy-gross) (video)
+ * [Understanding Dynamo](http://vimeo.com/18450323) (video)
  * [Riak Compared to Cassandra](http://docs.basho.com/riak/1.2.1/references/appendices/comparisons/Riak-Compared-to-Cassandra/)
 
 
 ## What to Read Next
 
+  * [Working with CQL](/articles/cql.html)
   * [Advanced Client Options](/articles/advanced_client_options.html)
-  * [Troubleshooting](/articles/troubleshooting.html)
