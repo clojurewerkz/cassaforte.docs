@@ -33,7 +33,7 @@ Covers CQL operations besides schema manipulation:
   * Filtering
   * Tuning consistency/availability per-request
 
-###  [Schema Operations](/articles/schema_operations.html)
+### [Schema Operations](/articles/schema_operations.html)
 
 Introduction to how to define and manage Cassandra schema with Cassaforte:
 
