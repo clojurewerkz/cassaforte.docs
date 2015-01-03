@@ -154,3 +154,32 @@ It is strongly recommended to wrap `DowngradingConsistencyPolicy` policy into `L
 
 Fall through should be used if you want to take care of retries
 yourself in business logic code.
+
+
+## TLS Connections
+
+Cassaforte supports TLS connections. To connect with TLS, you need to provide several
+options as a map in the `:ssl` key:
+
+ * `:keystore-path`
+ * `:keystore-password`
+ * `:cipher-suites`
+
+``` clojure
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+(cc/connect ["127.0.0.1"] {:ssl {:keystore-path     "/path/to/jks/keystore"
+                                 :keystore-password (System/getenv "KEYSTORE_PASSWORD")
+                                 :cipher-suites     (into-array String ["TLS_RSA_WITH_AES_128_CBC_SHA" "TLS_RSA_WITH_AES_256_CBC_SHA"])}})
+```
+
+Or, if it is more convenient, provide an instance of `com.datastax.driver.core.SSLOptions`
+via the `:ssl-options` key:
+
+``` clojure
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as cc]))
+
+(cc/connect ["127.0.0.1"] {:ssl-options ssl-opts})
+```
