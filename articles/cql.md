@@ -289,7 +289,7 @@ Available consistency levels are:
 Please refer to [Cassandra documentation on consistency levels](http://www.datastax.com/documentation/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html)
 for more info.
 
-Following operation will be performed with consistenct level of `:one`:
+Following operation will be performed with consistenct level of `:quorum`:
 
 ``` clojure
 (ns cassaforte.docs
