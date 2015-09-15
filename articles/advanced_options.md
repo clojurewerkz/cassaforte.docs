@@ -42,9 +42,9 @@ to instantiate the policy:
 (cp/exponential-reconnection-policy 100 1000)
 ```
 
-### Constant reconnectoin policy
+### Constant reconnection policy
 
-Constant reconnectoin policy waits for the fixed period of time
+Constant reconnection policy waits for the fixed period of time
 between reconnection attempts.
 
 `clojurewerkz.cassaforte.policies/constant-reconnection-policy` is used
@@ -52,7 +52,7 @@ to instantiate the policy:
 
 
 ```clojure
-(client/constant-reconnection-policy 100)
+(cp/constant-reconnection-policy 100)
 ```
 
 The policy above will wait for 100 milliseconds between reconnection
@@ -114,7 +114,7 @@ level for query to succeed. It will retry queries in two cases:
   * __on timed out read__, if enough replicas responded, but data still was not retrieved, which
     usually means that some of the nodes chosen by coordinator are dead but were not detected
     as such just yet.
-  * __on timed out write__, only if it occured during writing to distributed batch log. It is very likely that
+  * __on timed out write__, only if it occurred during writing to distributed batch log. It is very likely that
     coordinator picked unresponsive nodes that were not yet detected as dead.
 
 Use `clojurewerkz.cassaforte.policies/retry-policy` to pick a policy by name:
@@ -129,7 +129,7 @@ Use `clojurewerkz.cassaforte.policies/retry-policy` to pick a policy by name:
 
 Under some circumstances, it makes sense to tune the consistency level
 for the subsequent write. This sacrifices consistency for
-availability. Operation will still be considered as sucessful, even
+availability. Operation will still be considered as successful, even
 though smaller amount of replicas were used for the operation.
 
 For cases like that, you may use the downgrading policy. It will retry query:
@@ -142,9 +142,9 @@ For cases like that, you may use the downgrading policy. It will retry query:
   * if coordinator node notices that there's __not enough replicas__ alive to satisfy query, execute
     same query with lower consistency level.
 
-This policy should only be used when tradeoff of writing data to the
+This policy should only be used when trade-off of writing data to the
 smaller amount of nodes is acceptable. Also, that sometimes data won't
-be even possible to read that way, because tradeoff was made and
+be even possible to read that way, because trade-off was made and
 guarantees have changed. Reads with lower consistency level may
 increase chance of reading stale data.
 
