@@ -12,7 +12,7 @@ This guide covers most CQL operations, such as
   * Ordering
   * Collection Types
   * Counter Columns
-  * Timestampls and TTL
+  * Timestamps and TTL
   * Prepared Statements
   * Range queries
   * Pagination
@@ -289,7 +289,7 @@ Available consistency levels are:
 Please refer to [Cassandra documentation on consistency levels](http://www.datastax.com/documentation/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html)
 for more info.
 
-Following operation will be performed with consistenct level of `:quorum`:
+The following operation will be performed with consistency level of `:quorum`:
 
 ``` clojure
 (ns cassaforte.docs
@@ -808,7 +808,7 @@ column provides an efficient way to count or sum integer values. It is
 achieved by using atomic increment/decrement operations on column values.
 
 Counter is a special column type, whose value is a 64-bit (signed)
-interger. On write, new value is added (or substracted) to previous
+integer. On write, new value is added (or subtracted) to previous
 counter value. It should be noted that usual consistency/availability
 tradeoffs apply to counter operations. In order to perform a counter
 update, Cassandra has to perform a read before write in a background,

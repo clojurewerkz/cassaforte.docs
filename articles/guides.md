@@ -25,7 +25,7 @@ Covers CQL operations besides schema manipulation:
   * Ordering
   * Collection Types
   * Counter Columns
-  * Timestampls and TTL
+  * Timestamps and TTL
   * Prepared Statements
   * Range queries
   * Pagination

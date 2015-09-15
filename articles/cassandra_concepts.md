@@ -90,7 +90,7 @@ evenly distributed between them.
 
 This can be split into two parts: _Service Discovery_ and _Failure
 Detection_.  Service discovery comes into play when you set up a
-fresh node, add it to the cluster.  data gets replicated to that
+fresh node, add it to the cluster.  Data gets replicated to that
 node and it starts receiving requests.  When the node is was taken
 down for maintenance, or fails due to an error, this should be
 detected as quickly as possible by other members of the cluster.
@@ -110,7 +110,7 @@ If you're familiar with Cassandra, you may want to skip this section.
 __Keyspace__ is what's usually called database in relational
 databases, it holds column families, sets of key-value pairs. __Column
 family__ is somewhat close to the table concept from relational
-DBs. There're no relations between column families in Cassandra, even
+DBs. There are no relations between column families in Cassandra, even
 though it is possible to use foreign keys, _there will be no
 referencial integrity checks performed_.
 
