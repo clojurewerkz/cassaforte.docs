@@ -29,7 +29,7 @@ Cassaforte artifacts are [released to Clojars](https://clojars.org/clojurewerkz/
 ### With Leiningen
 
 ```clj
-[clojurewerkz/cassaforte "2.0.0"]
+[clojurewerkz/cassaforte "3.0.0-alpha1"]
 ```
 
 Please note that Cassaforte works with Clojure versions starting from
@@ -52,7 +52,7 @@ And then the dependency:
 <dependency>
   <groupId>clojurewerkz</groupId>
   <artifactId>cassaforte</artifactId>
-  <version>2.0.0</version>
+  <version>3.0.0-alpha1</version>
 </dependency>
 ```
 
@@ -63,11 +63,9 @@ and important changes are announced [@ClojureWerkz](http://twitter.com/clojurewe
 
 Cassaforte requires Clojure 1.6+.
 
-
 ### Supported Cassaforte Versions
 
 Cassaforte requires Cassandra 2.0. The most recent release is is recommended.
-
 
 ## Installing Cassandra
 
@@ -191,7 +189,7 @@ and "standard" (using a DSL based on [Hayt](https://github.com/mpenet/hayt)).
 (cc/execute session "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
 ```
 
-## Creating Keyspaces
+## Creating and updating Keyspaces
 
 Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases. Typically one keyspace is used by
@@ -203,25 +201,44 @@ one application.
 (ns cassaforte.docs
   (:require [clojurewerkz.cassaforte.client :as cc]
             [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query    :refer :all]))
+            [clojurewerkz.cassaforte.query  :refer :all]))
 
 (let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-keyspace conn "cassaforte_keyspace"
+  (create-keyspace session "cassaforte_keyspace"
                    (with {:replication
-                          {:class "SimpleStrategy"
-                           :replication_factor 1}})))
+                          {l"class"              "SimpleStrategy"
+                           "replication_factor" 1 }})))
 ```
 
 will execute the following query:
 
 ```sql
 CREATE KEYSPACE "cassaforte_keyspace"
-  WITH replication = {'class' : 'SimpleStrategy', 'replication_factor' : 1};
+WITH replication = {'class' : 'SimpleStrategy', 'replication_factor' : 1};
 ```
 
 This will create new CQL keyspace with simple replication strategy and
 replication factor of 1. Note that this replication factor is not
 advised for production.
+
+You can optionally specify `(if-not-exists)` clause in order to have it created
+only if it doesn't already exist.
+
+In order to update keyspace, you can use `alter-keyspace` function:
+
+```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as cc]
+            [clojurewerkz.cassaforte.cql    :as cql]
+            [clojurewerkz.cassaforte.query  :refer :all]))
+
+(let [conn (cc/connect ["127.0.0.1"])]
+  (alter-keyspace session "cassaforte_keyspace"
+                  (with
+                   {:replication
+                    {"class"              "SimpleStrategy"
+                     "replication_factor" 1}})))
+```
 
 ## Switching Keyspaces
 
@@ -242,7 +259,6 @@ which will use the following CQL:
 ```sql
 USE "cassaforte_keyspace";
 ```
-
 
 ## Creating and Updating Tables
 
@@ -295,7 +311,6 @@ columns that the key will be composed of:
 
 The example above will execute the following CQL:
 
-
 ```sql
 CREATE TABLE "user_posts" (username varchar,
                            body text,
@@ -304,6 +319,9 @@ CREATE TABLE "user_posts" (username varchar,
 ```
 
 User posts will now be identified by both `username` and `post_id`.
+
+You can optionally specify `(if-not-exists)` in table definition in order to
+create it only if it doesn't already exist.
 
 ## Updating Tables
 
@@ -589,18 +607,59 @@ stored for further execution, during which only prepared statement id
 is transferred. Prepared statements will be covered in more detail in
 the rest of the guides.
 
-To execute a group of queries using prepared statements, wrap them
-in `clojurewerkz.cassaforte.client/prepared`:
+You can use `clojurewerkz.cassaforte.query` namespace, which generates
+CQL statements for you. Alternatively you can pass the command to
+execute as a string.
+
+You can prepare the statement with `client/prepare`, and store the
+reference to the prepared statement somewhere. To bind prepared query
+with the parameters, `client/bind` should be used.
+
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.query  :refer :all]
+            [clojurewerkz.cassaforte.client :as client]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cc/prepared
-     (cql/insert conn "users" {:name "Alex" :age (int 19)})))
+
+(let [session  (client/connect ["127.0.0.1"])
+      prepared (client/prepare session
+                               (insert :users
+                                       {:name ?
+                                        :city ?
+                                        :age  ?}))
+      bound-statement (client/bind prepared
+                                   {:name "Alex" :city "Munich" :age (int 19)})]
+  (client/execute session bound-statement))
 ```
+
+You should be aware of the fact that if you're using hashmaps within `insert`
+statements, order in which arguments are rendered into the query itself
+will depend on the hash function of the key, therefore it is not predictable.
+We advise either using `array-map` and an argument vector:
+
+```clj
+(let [prepared (client/prepare
+                (insert :users
+                        (array-map :name ?
+                                   :city ?
+                                   :age  ?)))]
+  (client/bind prepared ["Alex" "Munich" (int 19)]))
+```
+
+or using hash-maps in both cases:
+
+```clj
+(let [prepared (client/prepare
+                (insert :users
+                        {:name ?
+                         :city ?
+                         :age  ?}))]
+  (client/bind prepared {:name "Alex"
+                         :city "Munich"
+                         :age  (int 19)}))
+```
+
 
 Learn more about prepared statements in the
 [CQL Operations](http://clojurecassandra.info/articles/cql.html) guide.
