@@ -19,7 +19,7 @@ it is applicable.
 
 ## What version of Cassaforte does this guide cover?
 
-This guide covers Cassaforte 2.0 (including preview releases).
+This guide covers Cassaforte 3.0 (including preview releases).
 
 
 ## Adding Cassaforte Dependency To Your Project
@@ -130,10 +130,10 @@ To connect to a cluster, use
 
 ```clj
 (ns cassaforte.docs.examples
-  (:require [clojurewerkz.cassaforte.client :as cc]))
+  (:require [clojurewerkz.cassaforte.client :as client]))
 
 ;; Will connect to localhost
-(cc/connect ["127.0.0.1"])
+(client/connect ["127.0.0.1"])
 ```
 
 In order to connect to multiple Cassandra cluster nodes, list
@@ -141,19 +141,19 @@ simply them in a collection:
 
 ```clj
 (ns cassaforte.docs.examples
-  (:require [clojurewerkz.cassaforte.client :as cc]))
+  (:require [clojurewerkz.cassaforte.client :as client]))
 
 ;; Will connect to 3 nodes
-(cc/connect ["127.0.0.1" "localhost" "another.node.local"])
+(client/connect ["127.0.0.1" "localhost" "another.node.local"])
 ```
 
 Options can be passed after seed node list:
 
 ```clj
 (ns cassaforte.docs.examples
-  (:require [clojurewerkz.cassaforte.client :as cc]))
+  (:require [clojurewerkz.cassaforte.client :as client]))
 
-(cc/connect ["127.0.0.1"] {:keyspace "myapp_development" :protocol-version 2})
+(client/connect ["127.0.0.1"] {:keyspace "myapp_development" :protocol-version 2})
 ```
 
 ## Cassaforte API Overview
@@ -173,20 +173,44 @@ schema operations, pagination, iteration over tables, and so on.
 used by functions in `clojurewerkz.cassaforte.cql`. Functions in this namespace
 are usually referred to in the current namespace (using `:refer`).
 
-`clojurewerkz.cassaforte.query` builds on top of [Hayt](https://github.com/mpenet/hayt) 2.0.
+`clojurewerkz.cassaforte.query` builds on top of [Java Driver](https://github.com/datastax/java-driver)
+since `3.0.0`.
 
 ## Two Ways to Execute Queries
 
 Cassaforte is built around CQL. There are two ways to run CQL queries: "raw" (as strings)
-and "standard" (using a DSL based on [Hayt](https://github.com/mpenet/hayt)).
+and "standard", using `Statements` from `java-driver`, which has some performance advantages.
 
-## Executing Raw CQL Queries
+### Executing Statements
 
-"Raw" CQL queries (executed using strings) can be executed using
+You can use `cql` DSL and execute the queries directly:
+
+```clj
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
+
+(insert session :users
+        {:name "Alex"
+         :city "Munich"
+         :age  (int 19)})
+```
+
+This will create a `Statement`, which has some internal optimizations. For example, numeric
+types won't get embedded into queries as Strings, and will be transferred in a binary form,
+which will result into better query performance. However, all these opmizations are transparent
+for users.
+
+### Executing Raw CQL Queries
+
+If you'd like to execute the "Raw" CQL queries (executed using strings) can be executed using
 `clojurewerkz.cassaforte.client/execute` function:
 
 ```clj
-(cc/execute session "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
+(ns cassaforte.docs.examples
+  (:require [clojurewerkz.cassaforte.client :as client]))
+
+(client/execute session "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);")
 ```
 
 ## Creating and updating Keyspaces
@@ -195,50 +219,52 @@ Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases. Typically one keyspace is used by
 one application.
 
-``
-
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query  :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
+(let [session (client/connect ["127.0.0.1"])]
   (create-keyspace session "cassaforte_keyspace"
                    (with {:replication
-                          {l"class"              "SimpleStrategy"
+                          {"class"              "SimpleStrategy"
                            "replication_factor" 1 }})))
 ```
 
-will execute the following query:
+Will create and execute the following query:
 
 ```sql
 CREATE KEYSPACE "cassaforte_keyspace"
 WITH replication = {'class' : 'SimpleStrategy', 'replication_factor' : 1};
 ```
 
-This will create new CQL keyspace with simple replication strategy and
+This Query will create new CQL keyspace with simple replication strategy and
 replication factor of 1. Note that this replication factor is not
 advised for production.
 
 You can optionally specify `(if-not-exists)` clause in order to have it created
 only if it doesn't already exist.
 
+You can find out more about options in `create-keyspace` query [here](http://docs.datastax.com/en/cql/3.0/cql/cql_reference/create_keyspace_r.html).
+
+## Altering Keyspace
+
 In order to update keyspace, you can use `alter-keyspace` function:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query  :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
+(let [session (client/connect ["127.0.0.1"])]
   (alter-keyspace session "cassaforte_keyspace"
                   (with
                    {:replication
                     {"class"              "SimpleStrategy"
                      "replication_factor" 1}})))
 ```
+
+You can find out more about options in `create-keyspace` query [here](http://docs.datastax.com/en/cql/3.0/cql/cql_reference/alter_keyspace_r.html).
 
 ## Switching Keyspaces
 
@@ -247,14 +273,14 @@ Before you can use a keyspace, you have to switch to it with
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/use-keyspace conn "cassaforte_keyspace"))
+(let [session (client/connect ["127.0.0.1"])]
+  (use-keyspace session "cassaforte_keyspace"))
 ```
 
-which will use the following CQL:
+Which create and execute the following CQL:
 
 ```sql
 USE "cassaforte_keyspace";
@@ -267,21 +293,19 @@ model look a lot more familair to relational database users. Data is stored
 in tables, which are collections of rows identified by a primary key and composed
 of multiple columns. [How exactly CQL 3 maps to internal column-oriented model in Cassandra](http://www.opensourceconnections.com/blog/2013/07/24/understanding-how-cql3-maps-to-cassandras-internal-data-structure/) is outside of the scope of this guide.
 
-To create a table, use `create-table` function.
-To to create a table with a single primary key, specify
-it in `primary-key` in column definitions:
+To create a table, use `create-table` function. To to create a table with a single
+primary key, specify it in `primary-key` in column definitions:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client    :as client]
+            [clojurewerkz.cassaforte.cql       :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn "users"
-                (column-definitions {:name :varchar
-                                     :age  :int
-                                     :primary-key [:name]})))
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :users
+                        (column-definitions {:name :varchar
+                                             :age  :int
+                                             :primary-key [:name]})))
 ```
 
 The example above will execute the following CQL:
@@ -297,11 +321,10 @@ columns that the key will be composed of:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client    :as client]
+            [clojurewerkz.cassaforte.cql       :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
+(let [conn (client/connect ["127.0.0.1"])]
   (cql/create-table conn "user_posts"
                 (column-definitions {:username :varchar
                                      :post_id  :varchar
@@ -321,25 +344,33 @@ CREATE TABLE "user_posts" (username varchar,
 User posts will now be identified by both `username` and `post_id`.
 
 You can optionally specify `(if-not-exists)` in table definition in order to
-create it only if it doesn't already exist.
+create it only if it doesn't already exists.
 
 ## Updating Tables
 
 In order to update an existing table, use
-`clojurewerkz.cassaforte.cql/alter-table`. You can add new columns and
-rename and change types of the existing ones:
+`clojurewerkz.cassaforte.cql/alter-table`.
 
-Change the type of a column to integer:
+You can add new columns with `add-column`, rename columns with `rename-column`,
+and change types of the existing ones with `alter-column` and drop columns
+with `drop-column`.
+
+You can add the column by using the following code:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client    :as client]
+            [clojurewerkz.cassaforte.cql       :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
-               (alter-column :post_id :int)))
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session :users
+               (add-column :age :int)))
+```
+
+This will create and execute the following Query:
+
+```sql
+ALTER TABLE "users" ADD age integer;
 ```
 
 The example above will execute
@@ -348,42 +379,40 @@ The example above will execute
 ALTER TABLE "users" ALTER post_id TYPE int;
 ```
 
-Here's how to add an integer column:
+In order to rename a column, you can use:
 
 ```clj
-(ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
-
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
-               (add-column :age :integer)))
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session :users
+               (rename-column :old_name :new_name)))
 ```
 
-this will execute
+Which will execute the following CQL:
 
 ```sql
-ALTER TABLE "users" ADD age integer;
+ALTER TABLE "users" RENAME old_name TO new_name;
 ```
 
-It is possible to rename a column:
+You can also change a type of the column by using:
 
 ```clj
-(ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
-
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
-               (rename-column :username :name)))
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session :users
+               (alter-column :age :int)))
 ```
 
-which will use the following CQL:
+Which will execute:
 
 ```sql
-ALTER TABLE "users" RENAME username TO name;
+ALTER TABLE users ALTER age TYPE int
+```
+
+Finally, in order to drop a column you can use:
+
+```cql
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session :users
+               (drop-column :age)))
 ```
 
 ## Inserting Rows
@@ -392,11 +421,11 @@ To insert a row in a table, use `clojurewerkz.cassaforte.cql/insert`:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/insert conn "users" {:name "Alex" :age (int 19)}))
+(let [session (client/connect ["127.0.0.1"])]
+  (insert session "users" {:name "Alex" :age (int 19)}))
 ```
 
 The example above will use the following CQL:
@@ -414,17 +443,17 @@ The examples in this section need some data to be in the "users" table:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users"]
-  (cql/insert conn table {:name "Alex" :city "Munich" :age (int 19)})
-  (cql/insert conn table {:name "Robert" :city "Berlin" :age (int 25)})
-  (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
+(let [session (client/connect ["127.0.0.1"])
+      table   "users"]
+  (insert session table {:name "Alex" :city "Munich" :age (int 19)})
+  (insert session table {:name "Robert" :city "Berlin" :age (int 25)})
+  (insert session table {:name "Sam" :city "San Francisco" :age (int 21)}))
 ```
 
-The above example will execute the following CQL:
+The above example will execute the following CQL queries:
 
 ```sql
 INSERT INTO "users" (name, city, age) VALUES ('Alex', 'Munich', 19);
@@ -438,13 +467,12 @@ First, a query that returns rows unconditionally:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users"]
-  (cql/select conn table))
+(let [sessio  (client/connect ["127.0.0.1"])
+      table   "users"]
+  (select session table))
 ;; => [{:name "Robert", :age 25, :city "Berlin"}
 ;;     {:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Sam", :age 21, :city "San Francisco"}]
@@ -462,13 +490,12 @@ Next, query a user by name:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users"]
-  (cql/select conn table (where [[= :name "Alex"]])))
+(let [session (client/connect ["127.0.0.1"])
+      table   "users"]
+  (cql/select session table (where [[= :name "Alex"]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
@@ -484,13 +511,12 @@ Next, query for rows that match any of the values from a collection (the so so-c
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users"]
-  (cql/select conn table (where [[:in :name ["Alex" "Robert"]]])))
+(let [session (client/connect ["127.0.0.1"])
+      table   "users"]
+  (cql/select session table (where [[:in :name ["Alex" "Robert"]]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Robert", :age 25, :city "Berlin"}]
 ```
@@ -509,14 +535,14 @@ exact match or `IN`. For example, having these `user_posts`:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users_posts"]
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
-  (cql/insert conn "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
+(let [session (client/connect ["127.0.0.1"])
+      table   "users_posts"]
+  (insert session "user_posts" { :username "Alex" :post_id "post1" :body "first post body"})
+  (insert session "user_posts" { :username "Alex" :post_id "post2" :body "second post body"})
+  (insert session "user_posts" { :username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
 You can't sort all the posts by `post_id`. But if you say that you want
@@ -525,15 +551,14 @@ possible:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users_posts"]
+(let [session (client/connect ["127.0.0.1"])
+      table   "users_posts"]
   ;; For brevity, we select :post_id column only
-  (cql/select conn table
-          (columns :post_id)
+  (select session table
+          (column :post_id)
           (where [[= :username "Alex"]])
           (order-by [:post_id :desc])))
 
@@ -556,14 +581,13 @@ Finally, you can use range queries to get a slice of data:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users_posts"]
+(let [session (client/connect ["127.0.0.1"])
+      table   "users_posts"]
   ;; For brevity, we select :post_id column only
-  (cql/select conn table
+  (select session table
           (columns :post_id)
           (where [[= :username "Alex"]
                   [> :post_id "post1"]
@@ -584,13 +608,12 @@ In order to limit results of a query, use the `limit` clause:
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users_posts"]
-  (cql/select conn table (limit 1)))
+(let [session (client/connect ["127.0.0.1"])
+      table   "users_posts"]
+  (cql/select session table (limit 1)))
 ;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
 ```
 
@@ -618,8 +641,8 @@ with the parameters, `client/bind` should be used.
 
 ```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.query  :refer :all]
-            [clojurewerkz.cassaforte.client :as client]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.query  :refer :all]))
 
 
 (let [session  (client/connect ["127.0.0.1"])
@@ -639,6 +662,10 @@ will depend on the hash function of the key, therefore it is not predictable.
 We advise either using `array-map` and an argument vector:
 
 ```clj
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.query  :refer :all]))
+
 (let [prepared (client/prepare
                 (insert :users
                         (array-map :name ?
