@@ -23,7 +23,7 @@ This guide relies on certain features that are covered in the [Advanced Client O
 
 ## What version of Cassaforte does this guide cover?
 
-This guide covers Cassaforte 2.0 (including preview releases).
+This guide covers Cassaforte 3.0.0.
 
 ## Inserting Rows (INSERT)
 
@@ -31,12 +31,11 @@ Consider the following table:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn :users
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :users
                 (column-definitions {:name :varchar
                                      :age  :int
                                      :city :varchar
@@ -51,15 +50,15 @@ CREATE TABLE users
    PRIMARY KEY (name));
 ```
 
-To insert a row in a table, use `clojurewerkz.cassaforte.cql/insert`:
+To insert a row in a table, use `clojurewerkz.cassaforte.insert`:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/insert conn "users" {:name "Alex" :age (int 19)}))
+(let [session (client/connect ["127.0.0.1"])]
+  (insert session "users" {:name "Alex" :age (int 19)}))
 ```
 
 The example above will use the following CQL:
@@ -78,14 +77,14 @@ first:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users"]
-  (cql/insert conn table {:name "Alex" :city "Munich" :age (int 19)})
-  (cql/insert conn table {:name "Robert" :city "Berlin" :age (int 25)})
-  (cql/insert conn table {:name "Sam" :city "San Francisco" :age (int 21)}))
+  (insert session table {:name "Alex" :city "Munich" :age (int 19)})
+  (insert session table {:name "Robert" :city "Berlin" :age (int 25)})
+  (insert session table {:name "Sam" :city "San Francisco" :age (int 21)}))
 ```
 
 The above code will execute the following CQL:
@@ -100,13 +99,12 @@ INSERT INTO "users" (name, city, age) VALUES ('Sam', 'San Francisco', 21);
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table))
+  (select session table))
 ;; => [{:name "Robert", :age 25, :city "Berlin"}
 ;;     {:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Sam", :age 21, :city "San Francisco"}]
@@ -124,13 +122,12 @@ Next, query a user by name:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where [[= :name "Alex"]])))
+  (select session table (where [[= :name "Alex"]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}]
 ```
 
@@ -146,13 +143,13 @@ Next, query for rows that match any of the values given in a vector (so so-calle
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users"]
-  (cql/select conn table (where [[:in :name ["Alex" "Robert"]]])))
+  (select session table
+          (where [[:in :name ["Alex" "Robert"]]])))
 ;; => [{:name "Alex", :age 19, :city "Munich"}
 ;;     {:name "Robert", :age 25, :city "Berlin"}]
 ```
@@ -171,14 +168,14 @@ exact match or `IN`. For example, having these `user_posts`:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
-      table "users_posts"]
-  (cql/insert conn "user_posts" {:username "Alex" :post_id "post1" :body "first post body"})
-  (cql/insert conn "user_posts" {:username "Alex" :post_id "post2" :body "second post body"})
-  (cql/insert conn "user_posts" {:username "Alex" :post_id "post3" :body "third post body"}))
+(let [session  (client/connect ["127.0.0.1"])
+      table    "users_posts"]
+  (insert session "user_posts" {:username "Alex" :post_id "post1" :body "first post body"})
+  (insert session "user_posts" {:username "Alex" :post_id "post2" :body "second post body"})
+  (insert session "user_posts" {:username "Alex" :post_id "post3" :body "third post body"}))
 ```
 
 You can't sort all the posts by `post_id`. But if you say that you want
@@ -187,14 +184,13 @@ possible:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users_posts"]
   ;; For brevity, we select :post_id column only
-  (cql/select conn table
+  (select session table
           (columns :post_id)
           (where [[= :username "Alex"]])
           (order-by [:post_id :desc])))
@@ -218,14 +214,13 @@ It is possible to use range queries to get a slice of data:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users_posts"]
   ;; For brevity, we select :post_id column only
-  (cql/select conn table
+  (select session table
           (columns :post_id)
           (where [[= :username "Alex"]
                   [> :post_id "post1"]
@@ -248,13 +243,12 @@ In order to limit results of a query, use the `limit` clause:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])
+(let [session  (client/connect ["127.0.0.1"])
       table "users_posts"]
-  (cql/select conn table (limit 1)))
+  (select session table (limit 1)))
 ;; => [{:username "Alex", :post_id "post1", :body "first post body"}]
 ```
 
@@ -271,7 +265,7 @@ To do that, wrap a database call into `clojurewerkz.cassaforte.policies/with-con
 
 Available consistency levels are:
 
-  * `:any`: write must be written to at least one node. `:any` will succeed even if all replica nodes
+  * `:any`: write must be written to at least one node. `:any` will suclienteed even if all replica nodes
     are down and a [hinted handoff](https://academy.datastax.com/courses/understanding-cassandra-architecture/understanding-hinted-handoff) write was made. Although in that case write will not become readable
     until replica nodex for the given key recover
   * `:one`: write must be written to commit log and memory table of at least one replica node
@@ -286,21 +280,21 @@ Available consistency levels are:
   * `:local_serial`: like `:serial` but confined to the local data center
   * `:all`: write must be written to commit log and memory table of all replica nodes for given key
 
-Please refer to [Cassandra documentation on consistency levels](http://www.datastax.com/documentation/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html)
-for more info.
+Please refer to [Cassandra documentation on consistency levels](http://www.datastax.com/documentation/cassandra/2.1/cassandra/dml/dml_config_consistency_c.html) for more info.
 
 The following operation will be performed with consistency level of `:quorum`:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
+  (:require [clojurewerkz.cassaforte.client   :as client]
             [clojurewerkz.cassaforte.policies :as cp]
-            [clojurewerkz.cassaforte.query :refer :all]))
+            [clojurewerkz.cassaforte.cql      :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cp/with-consistency-level :quorum
-    (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)})))
+(let [r {:name "Alex" :city "Munich" :age (int 19)}]
+    (client/execute *session*
+                    "INSERT INTO users (name, city, age) VALUES ('Alex', 'Munich', 19);"
+                    :consistency-level (cp/consistency-level :quorum))
+    (is (= r (first (select *session* :users (limit 1))))))
 ```
 
 ### Timestamp and TTL
@@ -324,12 +318,11 @@ use `(using :timestamp)` clause in your query:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)}
+(let [session (client/connect ["127.0.0.1"])]
+  (insert session :users {:name "Alex" :city "Munich" :age (int 19)}
           (using :timestamp (.getTime (java.util.Date.)))))
 ```
 
@@ -349,15 +342,13 @@ convention.
 You can also specify optional TTL (Time To Live) for column values. If
 you do so, column values will expire after specified amount of time.
 
-
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/insert conn :users {:name "Alex" :city "Munich" :age (int 19)}
+(let [session (client/connect ["127.0.0.1"])]
+  (insert session :users {:name "Alex" :city "Munich" :age (int 19)}
     (using :ttl 60)))
 ```
 
@@ -397,7 +388,6 @@ functions for working with UUIDs, including `:timeuuid` columns:
 ;= #uuid "b31abb3f-4584-11e3-7f7f-7f7f7f7f7f7f"
 ```
 
-
 ### Prepared Statements
 
 Prepared statements have same meaning as in relational
@@ -422,32 +412,27 @@ INSERT INTO users (name, city, age) VALUES (?, ?, ?);
 In order to execute a prepared query, you can use `client/execute` function:
 
 ``` clojure
-(client/execute
- (client/as-prepared "INSERT INTO users (name, city, age) VALUES (?, ?, ?);"
-                     "Alex" "Munich" (int 19))
- :prepared true)
+(ns cassaforte.docs
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
+
+(let [session (client/connect ["127.0.0.1"])]
+      prepared (client/prepare session
+                               (query/insert :users
+                                             {:name ?
+                                              :city ?
+                                              :age  ?}))]
+  (client/execute session
+                  (client/bind prepared
+                               {:name "Alex" :city "Munich" :age (int 19)})))
 ```
-
-Internally, execute will prepare query or get cached identifier and execute prepared statement
-against the cluster. However, we provide a higher-level API for working with prepared statements.
-You can wrap any query from `cql` namespace into `client/prepared`, which will execute query as
-prepared one:
-
-``` clojure
-(client/prepared
- (insert :users {:name "Alex" :city "Munich" :age (int 19)}))
-```
-
-If you want to run __all__ queries generated by `cql` or `multi.cql` namespaces as prepared,
-you can use `force-prepared-queries` connection option.
-
 
 #### Paginating Through Results
 
 Pagination with Cassandra can at times be less convenient than with relational databases.
-Fortunately, Cassaforte provides a convenience function `clojurewerkz.cassaforte.cql/iterate-table`
+Fortunately, Cassaforte provides a convenience function `clojurewerkz.cassaforte.iterate-table`
 that is sufficient for many cases. This section first introduces the strategy used by
-Cassaforte and then provides and example of `clojurewerkz.cassaforte.cql/iterate-table` at
+Cassaforte and then provides and example of `clojurewerkz.cassaforte.iterate-table` at
 the end, so you may want to skip to that.
 
 To paginate through contents of an entire table, it is common to use the so called "token
@@ -460,12 +445,11 @@ To demonstrate, consider the following table:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (create-table conn :users
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :users
                 (column-definitions {:name :varchar
                                      :age  :int
                                      :city :varchar
@@ -480,25 +464,23 @@ Add 100 entries to it:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn  (cc/connect ["127.0.0.1"])]
+(let [session  (client/connect ["127.0.0.1"])]
   (dotimes [i 100]
-    (cql/insert conn :users {:name (str "name_" i) :city (str "city" i) :age (int i)})))
+    (insert session :users {:name (str "name_" i) :city (str "city" i) :age (int i)})))
 ```
 
 Get the first page:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/select conn :users (limit 10)))
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :users (limit 10)))
 ```
 
 ```sql
@@ -516,12 +498,11 @@ __page__, you should use `token` function:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (select conn :users
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :users
     (where (token :name) [> (token "name_53")])
     (limit 10)))
 ```
@@ -532,7 +513,7 @@ SELECT * FROM users WHERE token(name) > token('name_53') LIMIT 10;
 
 This will return next page in the desired order.
 
-Cassaforte provides a convenience function `clojurewerkz.cassaforte.cql/iterate-table`, which uses lazy sequences to
+Cassaforte provides a convenience function `clojurewerkz.cassaforte.iterate-table`, which uses lazy sequences to
 implement the algorithm described above.
 
 In the example below, we iterate over `users` collection, using `name`
@@ -540,12 +521,11 @@ as a partition key, and get `10` results per page:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/iterate-table conn :users [[= :name 10]]))
+(let [session (client/connect ["127.0.0.1"])]
+  (iterate-table session :users [[= :name 10]]))
 ```
 
 
@@ -564,12 +544,11 @@ part of the key:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn :tv_series
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :tv_series
                 (column-definitions {:series_title  :varchar
                                      :episode_id    :int
                                      :episode_title :text
@@ -587,14 +566,13 @@ Populate the table:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
+(let [session (client/connect ["127.0.0.1"])]
   (dotimes [i 20]
-    (cql/insert conn :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
-    (cql/insert conn :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)})))
+    (insert session :tv_series {:series_title "Futurama" :episode_id i :episode_title (str "Futurama Title " i)})
+    (insert session :tv_series {:series_title "Simpsons" :episode_id i :episode_title (str "Simpsons Title " i)})))
 ```
 
 If you lock partition key by using equality `WHERE series_title =
@@ -604,14 +582,13 @@ a second part of compound key):
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/select conn :tv_series
-          (where :series_title [:in ["Futurama" "Simpsons"]]
-                 :episode_id [> 10])))
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :tv_series
+          (where [[:in :series_title ["Futurama" "Simpsons"]]
+                  [>   :episode_id 10]])))
 ```
 
 ```sql
@@ -624,15 +601,14 @@ range (__from__ .. __to__):
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/select conn :tv_series
-          (where :series_title "Futurama"
-                 :episode_id [> 10]
-                 :episode_id [<= 15])))
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :tv_series
+          (where [[=  :series_title "Futurama"]
+                  [>  :episode_id 10]
+                  [<= :episode_id 15]])))
 ```
 
 ```sql
@@ -647,14 +623,13 @@ of the key except for the partition key:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/select conn :tv_series
-          (where :series_title "Futurama")
-          (order-by [:episode_id])))
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :tv_series
+          (where {:series_title "Futurama"})
+          (order-by :episode_id)))
 ```
 
 ```sql
@@ -687,13 +662,12 @@ CREATE TABLE users
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-index conn :users :age)
-  (cql/create-index conn :users :city))
+(let [session (client/connect ["127.0.0.1"])]
+  (create-index session :users :age)
+  (create-index session :users :city))
 ```
 
 ```sql
@@ -706,15 +680,14 @@ Now, it is possible to query for all users of certain `age` living in a certain 
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/select conn :users
-          (where :city "Munich"
-                 :age [> (int 5)])
-          (allow-filtering true)))
+(let [session (client/connect ["127.0.0.1"])]
+  (select session :users
+          (where [[= :city "Munich"]
+                  [> :age  (int 5)]])
+          (allow-filtering)))
 ```
 
 ```sql
@@ -730,12 +703,11 @@ and `qbits.hayt.utils/set-type`, respectively:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn :thingies
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :thingies
                 (column-definitions {:name :varchar
                                      :test_map  (map-type :varchar :varchar)
                                      :test_set  (set-type :int)
@@ -749,57 +721,29 @@ their respective immutable Clojure counterparts.
 To add an entry to a map, use the `+` operator and a Clojure map:
 
 ``` clojure
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :thingies
-          {:test_map [+ {"key1" "value1"
-                         "key2" "value2"}]}
+(let [session (client/connect ["127.0.0.1"])]
+  (update :foo
+          {:test_map (put-values
+                      (array-map "key1" value1
+                                 "key2" value2))}
           (where :name "thingie1")))
 
 ```
+
+You can also use a singular `(put-value k v)` and `(remove-all-tail k1 k2 k3 ...)`
+in a similar fashion.
 
 Similarly, to append a value to a list column:
 
 ``` clojure
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :thingies
-          {:test_list [+ ["value1"]]}
+(let [session (client/connect ["127.0.0.1"])]
+  (update session :thingies
+          {:test_list (append "value1")}
           (where :name "thingie1")))
-
 ```
 
-Note that in the example above we use a vector but a Clojure list could
-do, too.
-
-Finally, to add a value to a set:
-
-``` clojure
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :thingies
-          {:test_list [+ #{"value1"}]}
-          (where :name "thingie1")))
-
-```
-
-To remove a value from a list column:
-
-``` clojure
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :thingies
-          {:test_list [- ["value1"]]}
-          (where :name "thingie1")))
-
-```
-
-Same with a set:
-
-``` clojure
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :thingies
-          {:test_list [- #{"value1"}]}
-          (where :name "thingie1")))
-
-```
-
+Similarly, you can use `(prepend v)`, `(discard idx)`, `()discard-all)`,
+`(append-all [v1 v2 v3])` and `(set-idx idx value)` in a similar fashion.
 
 ### Counters
 
@@ -821,12 +765,11 @@ performed by the user:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn :user_counters
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session :user_counters
                 (column-definitions {:name :varchar
                                      :user_count  :counter
                                      :primary-key [:name]})))
@@ -844,16 +787,15 @@ following DSL syntax:
 
 ``` clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/update conn :user_counters
+(let [session (client/connect ["127.0.0.1"])]
+  (update session :user_counters
           {:user_count (increment-by 5)}
           (where :name "user1"))
-  
-  (cql/update conn :user_counters
+
+  (update session :user_counters
           {:user_count (decrement-by 5)}
           (where :name "user1")))
 ```
@@ -877,7 +819,6 @@ Cassandra provide.
 
 ## What to read next
 
-  * [Data Modelling](/articles/data_modelling.html)
   * [Schema Operations](/articles/schema_operations.html)
   * [Key Cassandra Concepts](/articles/cassandra_concepts.html)
-  * [Advanced Client Options](/articles/advanced_client_options.html)
+  * [Advanced Client Options](/articles/advanced_options.html)
