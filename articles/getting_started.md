@@ -409,7 +409,7 @@ ALTER TABLE users ALTER age TYPE int
 
 Finally, in order to drop a column you can use:
 
-```cql
+```sql
 (let [session (client/connect ["127.0.0.1"])]
   (alter-table session :users
                (drop-column :age)))
