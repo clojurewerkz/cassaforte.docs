@@ -13,7 +13,7 @@ This guide covers Cassandra schema management with Cassaforte:
 
 ## What version of Cassaforte does this guide cover?
 
-This guide covers Cassaforte 2.0 (including preview releases).
+This guide covers Cassaforte 3.0.0 (including preview releases).
 
 
 ## Creating Keyspaces
@@ -22,18 +22,16 @@ Cassandra organizes data in keyspaces. They're somewhat similar to
 databases in relational databases. Typically one keyspace is used by
 one application.
 
-``
-
-``` clojure
+```clojure
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-keyspace conn "cassaforte_keyspace"
+(let [session (client/connect ["127.0.0.1"])]
+  (create-keyspace session "cassaforte_keyspace"
                    (with {:replication
-                          {:class "SimpleStrategy"
-                           :replication_factor 1 }})))
+                          {"class" "SimpleStrategy"
+                           "replication_factor" 1 }})))
 ```
 
 will execute the following query:
@@ -50,15 +48,15 @@ advised for production.
 ## Switching Keyspaces
 
 Before you can use a keyspace, you have to switch to it with
-`clojurewerkz.cassaforte.cql/use-keyspace`:
+`clojurewerkz.cassaforte.use-keyspace`:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/use-keyspace conn "cassaforte_keyspace"))
+(let [session (client/connect ["127.0.0.1"])]
+  (use-keyspace session "cassaforte_keyspace"))
 ```
 
 which will use the following CQL:
@@ -79,14 +77,13 @@ To create a table, use `create-table` function.
 To to create a table with a single primary key, specify
 it in `primary-key` in column definitions:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn "users"
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session "users"
                 (column-definitions {:name :varchar
                                      :age  :int
                                      :primary-key [:name]})))
@@ -103,14 +100,13 @@ CREATE TABLE "users" (age int,
 To create a table with a composite primary key, pass a vector holding the names of
 columns that the key will be composed of:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn "user_posts"
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session "user_posts"
                 (column-definitions {:username :varchar
                                      :post_id  :varchar
                                      :body     :text
@@ -132,19 +128,18 @@ User posts will now be identified by both `username` and `post_id`.
 ## Updating Tables
 
 In order to update an existing table, use
-`clojurewerkz.cassaforte.cql/alter-table`. You can add new columns and
+`clojurewerkz.cassaforte.alter-table`. You can add new columns and
 rename and change types of the existing ones:
 
 Change the type of a column to integer:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session "users"
                (alter-column :post_id :int)))
 ```
 
@@ -156,14 +151,13 @@ ALTER TABLE "users" ALTER post_id TYPE int;
 
 Here's how to add an integer column:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session "users"
                (add-column :age :integer)))
 ```
 
@@ -175,14 +169,13 @@ ALTER TABLE "users" ADD age integer;
 
 It is possible to rename a column:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/alter-table conn "users"
+(let [session (client/connect ["127.0.0.1"])]
+  (alter-table session "users"
                (rename-column :username :name)))
 ```
 
@@ -198,14 +191,13 @@ Cassandra tables can have collection columns, that is, columns
 of types list, map, and set. To define them with Cassaforte, use
 ``, ``, and ``:
 
-``` clojure
+```clj
 (ns cassaforte.docs
-  (:require [clojurewerkz.cassaforte.client :as cc]
-            [clojurewerkz.cassaforte.cql    :as cql]
-            [clojurewerkz.cassaforte.query :refer :all]))
+  (:require [clojurewerkz.cassaforte.client :as client]
+            [clojurewerkz.cassaforte.cql    :refer :all]))
 
-(let [conn (cc/connect ["127.0.0.1"])]
-  (cql/create-table conn "thingies"
+(let [session (client/connect ["127.0.0.1"])]
+  (create-table session "thingies"
                 (column-definitions {:name :varchar
                                      :test_map  (map-type :varchar :varchar)
                                      :test_set  (set-type :int)
